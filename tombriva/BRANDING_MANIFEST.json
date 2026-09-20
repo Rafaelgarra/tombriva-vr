@@ -1,0 +1,30 @@
+[
+  {
+    "path": "browser/fxr/content/fxrui.html",
+    "sha256": "eb5f0d4c4c9e52bda9a77fff8d966a78ef79124d4292e5216b799194fbde7a5f"
+  },
+  {
+    "path": "browser/fxr/content/prefs.html",
+    "sha256": "05f0ccc5a4081bc956ac92417f2f58d5cfd818dd4649e5888b2d659e689a0cac"
+  },
+  {
+    "path": "browser/fxr/content/fxrui.js",
+    "sha256": "12632dc66170dec2c9ecb4851cc6a4a4c9faf1baf3818c36f93cb12e0c9a84a5"
+  },
+  {
+    "path": "browser/fxr/jar.mn",
+    "sha256": "98a8dc04a6aea00ddb07acad183019900614e8eb962b704e66a08a40b194f2f7"
+  },
+  {
+    "path": "gfx/vr/FxROutputHandler.cpp",
+    "sha256": "8dfb2d83419a89364505f9719604573f7b8dce0fb5c64cc844ef5bd336671003"
+  },
+  {
+    "path": "gfx/vr/FxRDashboardIcon.h",
+    "sha256": "220949f41ad0a82c420291d773aa4485bc5652d643486ab8e5953fdf28dd8c9e"
+  },
+  {
+    "path": "browser/fxr/content/assets/tombriva-vr.png",
+    "sha256": "eb48697b5229baed4e81bfcb96d4efdbc589a0810b7e14ae9c3cee044a2d6366"
+  }
+]

@@ -188,7 +188,7 @@ void FxROutputHandler::IdentifyOverlayApplication() {
       "\n"
       "    \"is_dashboard_overlay\" : true,"
       "\n"
-      "    \"strings\" : { \"en_us\" : { \"name\" : \"Vulpis VR\" } }"
+      "    \"strings\" : { \"en_us\" : { \"name\" : \"Tombriva VR\" } }"
       "\n"
       "  }]"
       "\n"
@@ -572,7 +572,7 @@ void FxROutputHandler::EnsureTitleBar() {
     return;
   }
   if (vr::VROverlay()->CreateOverlay("firefox.reality.titlebar",
-                                     "Vulpis VR Title Bar", &mTitleBarHandle) !=
+                                     "Tombriva VR Title Bar", &mTitleBarHandle) !=
       vr::VROverlayError_None) {
     mTitleBarHandle = vr::k_ulOverlayHandleInvalid;
     return;
@@ -683,7 +683,7 @@ void FxROutputHandler::EnsureControlsOverlay() {
 
   if (mControlsHandle == vr::k_ulOverlayHandleInvalid) {
     vr::EVROverlayError err = vr::VROverlay()->CreateOverlay(
-        "firefox.reality.controls", "Vulpis VR Controls", &mControlsHandle);
+        "firefox.reality.controls", "Tombriva VR Controls", &mControlsHandle);
     if (err != vr::VROverlayError_None) {
       printf_stderr("[FxR-Modern-GPU] CreateOverlay(controls) falhou: %d \n",
                     (int)err);
@@ -874,7 +874,7 @@ bool FxROutputHandler::EnsureOverlay(uint32_t aWidth, uint32_t aHeight) {
   }
 
   vr::EVROverlayError err = vr::VROverlay()->CreateOverlay(
-      "firefox.reality.overlay", "Vulpis VR", &mOverlayHandle);
+      "firefox.reality.overlay", "Tombriva VR", &mOverlayHandle);
 
   if (err == vr::VROverlayError_KeyInUse) {
     vr::VROverlayHandle_t existing = vr::k_ulOverlayHandleInvalid;
@@ -882,7 +882,7 @@ bool FxROutputHandler::EnsureOverlay(uint32_t aWidth, uint32_t aHeight) {
         vr::VROverlayError_None) {
       vr::VROverlay()->DestroyOverlay(existing);
     }
-    err = vr::VROverlay()->CreateOverlay("firefox.reality.overlay", "Vulpis VR",
+    err = vr::VROverlay()->CreateOverlay("firefox.reality.overlay", "Tombriva VR",
                                          &mOverlayHandle);
   }
 
@@ -917,7 +917,7 @@ bool FxROutputHandler::EnsureOverlay(uint32_t aWidth, uint32_t aHeight) {
   vr::VROverlay()->SetOverlaySortOrder(mOverlayHandle, 100);
 
   err = vr::VROverlay()->CreateDashboardOverlay("firefox.reality.dashboard",
-                                                "Vulpis VR", &mDashboardHandle,
+                                                "Tombriva VR", &mDashboardHandle,
                                                 &mDashboardIcon);
   if (err != vr::VROverlayError_None) {
     if (mDashboardHandle) vr::VROverlay()->DestroyOverlay(mDashboardHandle);
@@ -1123,7 +1123,7 @@ void FxROutputHandler::RunInputPump() {
       vr::VROverlay()->ShowKeyboardForOverlay(
           InputOverlay(), vr::k_EGamepadTextInputModeNormal,
           vr::k_EGamepadTextInputLineModeSingleLine, vr::KeyboardFlag_Minimal,
-          "Vulpis VR", 256, "", 0);
+          "Tombriva VR", 256, "", 0);
       vr::HmdRect2_t rect = {{0.0f, (float)mOverlayHeight},
                              {(float)mOverlayWidth, 0.0f}};
       vr::VROverlay()->SetKeyboardPositionForOverlay(InputOverlay(), rect);

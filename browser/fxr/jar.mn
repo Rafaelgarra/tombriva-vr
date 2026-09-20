@@ -25,7 +25,7 @@ browser.jar:
    content/browser/fxr/prefs.css                (content/prefs.css)
    content/browser/fxr/prefs.js                 (content/prefs.js)
 
-   content/browser/fxr/assets/vulpis-vr.svg              (content/assets/vulpis-vr.svg)
+   content/browser/fxr/assets/tombriva-vr.png              (content/assets/tombriva-vr.png)
    content/browser/fxr/assets/icon-backward.svg         (content/assets/icon-backward.svg)
    content/browser/fxr/assets/icon-forward.svg          (content/assets/icon-forward.svg)
    content/browser/fxr/assets/icon-home.svg             (content/assets/icon-home.svg)

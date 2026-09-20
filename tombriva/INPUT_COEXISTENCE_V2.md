@@ -10,7 +10,7 @@ The maintainer confirmed that the tested build works, but SteamVR Home analog-st
 
 `gfx/vr/FxROutputHandler.cpp` sets `VROverlayInputMethod_Mouse` and `VROverlayFlags_MakeOverlaysInteractiveIfVisible` on the detached panel and its drag overlay. `UpdatePanelVisibility` enables mouse input for shown panels and disables it for hidden panels. The same relevant settings are present in the active development source.
 
-The vendored OpenVR header explicitly documents that this flag activates the system-wide laser mouse mode whenever an interactive overlay is visible. This is strong evidence for input arbitration as the explanation for the report. We did not collect SteamVR Home action/focus telemetry or perform a controlled flag-off comparison, so the exact runtime path suppressing locomotion remains unconfirmed. It should not be described merely as a deliberate per-button anti-click-through rule implemented by Vulpis.
+The vendored OpenVR header explicitly documents that this flag activates the system-wide laser mouse mode whenever an interactive overlay is visible. This is strong evidence for input arbitration as the explanation for the report. We did not collect SteamVR Home action/focus telemetry or perform a controlled flag-off comparison, so the exact runtime path suppressing locomotion remains unconfirmed. It should not be described merely as a deliberate per-button anti-click-through rule implemented by Tombriva.
 
 The reviewed panel code uses automatic overlay mouse events, not an action-set mechanism selectively capturing only pointer/trigger inputs. Removing the flag alone risks losing the native laser and working overlay events; passing all input onward risks unintended scene actions during browser clicks.
 

@@ -1,12 +1,12 @@
-# Vulpis VR
+# Tombriva VR
 
-<img src="vulpis/assets/vulpis-vr.svg" alt="Vulpis VR" width="128" />
+<img src="tombriva/assets/tombriva-vr.png" alt="Tombriva VR" width="128" />
 
 An experimental spatial browser for viewing compatible 360° and VR180 videos with PSVR2 on PC through SteamVR.
 
 This is a real fork of [Mozilla's Firefox source repository](https://github.com/mozilla-firefox/firefox), based on `FIREFOX_153_2_0esr_RELEASE`. It also includes adaptations informed by [Firefox Reality PC](https://github.com/MozillaReality/gecko-dev). The work started as a personal project to make VR web video usable on PSVR2 and is shared for others facing the same problem.
 
-Vulpis VR is not officially associated with Mozilla or its products. Firefox is a trademark of the Mozilla Foundation in the U.S. and other countries.
+Tombriva VR is not officially associated with Mozilla or its products. Firefox is a trademark of the Mozilla Foundation in the U.S. and other countries.
 
 **Source preview — there is no validated installer or portable public binary release yet.** The development build has been tested on the maintainer's PSVR2 setup; other PCs, media formats and sites need further testing. This is not a replacement for a maintained general-purpose browser for sensitive browsing.
 
@@ -16,9 +16,9 @@ Vulpis VR is not officially associated with Mozilla or its products. Firefox is 
 
 In the maintainer's tested environment, ordinary browser playback did not provide the needed end-to-end experience for YouTube and other compatible 360/VR180 web content: spatial browsing, the correct panorama in the headset, controller input and a reliable return to the page. This describes the motivation and observed integration gap, not an assertion that PSVR2 hardware can never work with any other browser or application.
 
-Vulpis bridges that gap by adapting the Gecko/FxR browser: a native OpenVR panel presents the browser in SteamVR; the media bridge accesses the page's video element and renders supported projections in WebXR; repaired browser-to-VR texture/session paths deliver frames through OpenVR to SteamVR and PSVR2. Sense controls provide navigation, recentering and exit. ERP/EAC interpretation and supported VR180 metadata/mesh handling avoid treating every stream as the same stretched browser image.
+Tombriva bridges that gap by adapting the Gecko/FxR browser: a native OpenVR panel presents the browser in SteamVR; the media bridge accesses the page's video element and renders supported projections in WebXR; repaired browser-to-VR texture/session paths deliver frames through OpenVR to SteamVR and PSVR2. Sense controls provide navigation, recentering and exit. ERP/EAC interpretation and supported VR180 metadata/mesh handling avoid treating every stream as the same stretched browser image.
 
-This is currently a modified browser, not a universal extension, driver replacement or modification of the headset firmware. It still relies on SteamVR. Compatibility with other headsets is not claimed without testing. See [architecture and scope](vulpis/ARCHITECTURE.md).
+This is currently a modified browser, not a universal extension, driver replacement or modification of the headset firmware. It still relies on SteamVR. Compatibility with other headsets is not claimed without testing. See [architecture and scope](tombriva/ARCHITECTURE.md).
 
 ## What works in the tested setup
 
@@ -33,13 +33,13 @@ Rendering interpretation depends on the delivered media projection. The project 
 
 ## Known limitation: moving in SteamVR Home
 
-In the tested PSVR2 setup, analog-stick locomotion in SteamVR Home is unavailable while the browser is an interactive **detached window**. Simultaneous room navigation and browser interaction is not supported by the current input mode. This does not refer to physical headset tracking. Selective input sharing is deferred to V2; see [findings and validation plan](vulpis/INPUT_COEXISTENCE_V2.md).
+In the tested PSVR2 setup, analog-stick locomotion in SteamVR Home is unavailable while the browser is an interactive **detached window**. Simultaneous room navigation and browser interaction is not supported by the current input mode. This does not refer to physical headset tracking. Selective input sharing is deferred to V2; see [findings and validation plan](tombriva/INPUT_COEXISTENCE_V2.md).
 
 ## Requirements and use
 
 Windows x64, a GPU/driver capable of decoding the chosen video, a correctly configured PSVR2 PC setup, paired Sense controllers, SteamVR and the PlayStation VR2 App. Those external applications are installed separately; they are not bundled here. Verify that the headset and controllers already work in SteamVR.
 
-For developers, see [build notes](vulpis/BUILD.md). A future release will provide installation instructions, checksums and a clean profile. Do not copy the maintainer's personal profile or assume development scripts are portable.
+For developers, see [build notes](tombriva/BUILD.md). A future release will provide installation instructions, checksums and a clean profile. Do not copy the maintainer's personal profile or assume development scripts are portable.
 
 The initial page defaults to Google and can be changed through `vulpis.startup.homepage`. The old localhost test harness is not required for startup. Open a compatible video, use the goggles button, then choose 360° or VR180. During playback, look in the desired direction and press the trigger to recenter; R1/grip returns to the browser.
 
@@ -47,21 +47,21 @@ The new tutorial uses Gecko's native Fluent/DOMLocalization APIs and follows the
 
 ## Source, builds and updates
 
-The `vulpis-vr` branch contains the imported modifications on the official base tag. Upstream source and component notices remain intact. See [import record](vulpis/SOURCE_IMPORT.md) for the exact baseline and verification scope.
+The `tombriva-vr` branch contains the imported modifications on the official base tag. Upstream source and component notices remain intact. See [import record](tombriva/SOURCE_IMPORT.md) for the exact baseline and verification scope.
 
-The existing build disables the updater. A future update channel must ship only Vulpis builds after testing against updated Gecko versions; do not point it at stock Firefox binaries. Full installer/executable rebranding, security defaults, language packs, long-session testing and clean-PC installation remain release tasks. No automatic compatibility with arbitrary browser or SteamVR updates is claimed.
+The existing build disables the updater. A future update channel must ship only Tombriva builds after testing against updated Gecko versions; do not point it at stock Firefox binaries. Full installer/executable rebranding, security defaults, language packs, long-session testing and clean-PC installation remain release tasks. No automatic compatibility with arbitrary browser or SteamVR updates is claimed.
 
 ## Acknowledgements
 
-Vulpis VR builds on the work of **Mozilla and contributors**, and the **Firefox Reality contributors**. Thank you to the developers who created and maintained these projects. See the [Firefox source](https://github.com/mozilla-firefox/firefox), [Firefox Reality PC source](https://github.com/MozillaReality/gecko-dev), and [source import record](vulpis/SOURCE_IMPORT.md) for the lineage. Original copyright and license notices remain in the source tree.
+Tombriva VR builds on the work of **Mozilla and contributors**, and the **Firefox Reality contributors**. Thank you to the developers who created and maintained these projects. See the [Firefox source](https://github.com/mozilla-firefox/firefox), [Firefox Reality PC source](https://github.com/MozillaReality/gecko-dev), and [source import record](tombriva/SOURCE_IMPORT.md) for the lineage. Original copyright and license notices remain in the source tree.
 
 ## Independence and licensing
 
-Vulpis VR is an independent community project based on Firefox/Gecko, with work adapted from Firefox Reality. It is not developed, sponsored, endorsed by or affiliated with Mozilla, Valve, Sony or Google/YouTube. Product names identify source lineage or interoperability, not official support.
+Tombriva VR is an independent community project based on Firefox/Gecko, with work adapted from Firefox Reality. It is not developed, sponsored, endorsed by or affiliated with Mozilla, Valve, Sony or Google/YouTube. Product names identify source lineage or interoperability, not official support.
 
 Modified MPL-covered code remains under **MPL 2.0**. Other components retain their own licenses. The upstream [LICENSE](LICENSE), [complete Gecko notices](toolkit/content/license.html), component license files and packaged `about:license` page are preserved. The current FxR panel could not navigate to that internal page in testing, so its license button links to this public section. [OpenVR's BSD-style three-clause license](gfx/vr/service/openvr/LICENSE) is also retained.
 
-The supplied Vulpis logo is dedicated under **CC0 1.0**, to the extent of the maintainer's rights, with no attribution required. See [artwork terms](vulpis/assets/LICENSE.md). The public tutorial uses a new generic vector diagram; drawings derived from a third-party controller photograph are excluded.
+The supplied Tombriva logo is dedicated under **CC0 1.0**, to the extent of the maintainer's rights, with no attribution required. See [artwork terms](tombriva/assets/LICENSE.md). The public tutorial uses a new generic vector diagram; drawings derived from a third-party controller photograph are excluded.
 
 The source license does not grant Mozilla or other third-party trademark rights. Original credits, notices and technical identifiers are retained. The existing development executable still needs a separate release/branding audit. See [licensing review](LICENSING_REVIEW.md).
 

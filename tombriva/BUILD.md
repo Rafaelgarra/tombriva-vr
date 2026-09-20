@@ -1,4 +1,4 @@
-# Building Vulpis VR from source
+# Building Tombriva VR from source
 
 This is a development source fork, not an installer release. The code baseline is the official `FIREFOX_153_2_0esr_RELEASE` tag (`feec67e62a5148b41fd017ccbbc463e8a6f9e83d`). The repository preserves upstream history through the GitHub fork network.
 
@@ -9,7 +9,7 @@ Use a short checkout path and enable Git's long-path support before cloning. Fol
 The original development configuration used a separate object directory and these options:
 
 ```sh
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-vulpis
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-tombriva
 ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-pc-windows-msvc
 ac_add_options --disable-tests
@@ -28,7 +28,7 @@ SteamVR and the PlayStation VR2 PC setup must already work. Launch the built exe
 
 The tested VR configuration also uses preferences for OpenVR/WebXR and offscreen rendering. Review the current development launcher and source defaults before building a distributable configuration: this source import is not a promise that a clean installation has passed the headset acceptance suite. In particular, permission-testing preferences and the GPU sandbox configuration require a product/security review before general-purpose browsing distribution.
 
-The updater is disabled. Do not point this build at Mozilla's binary update service or automatically install a stock build over the VR modifications. Future Vulpis releases need corresponding source tags, checksums, their own signed update channel, and validation of the complete SteamVR enter/play/exit lifecycle.
+The updater is disabled. Do not point this build at Mozilla's binary update service or automatically install a stock build over the VR modifications. Future Tombriva releases need corresponding source tags, checksums, their own signed update channel, and validation of the complete SteamVR enter/play/exit lifecycle.
 
 ## Validation status
 

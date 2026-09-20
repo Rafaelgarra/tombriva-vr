@@ -11,7 +11,7 @@ Prepared 2026-09-20. Status: source-only publication approved by the maintainer 
 - Archive SHA-256: `c443c99704aadaf60fb267d709c42bc283e49e82292084f976369c8327ad833c`
 - Source Mercurial stamp: `92c5bf513a3e4e39fa70df2df6a565a1049a9920`
 - Legacy reference: https://github.com/MozillaReality/gecko-dev, inspected checkout `f0d4809d080a45e464f9664ed501e7c82e06a041`.
-- Destination fork: https://github.com/Rafaelgarra/vulpis-vr ; local development branch `vulpis-vr`.
+- Destination fork: https://github.com/Rafaelgarra/tombriva-vr ; local development branch `tombriva-vr`.
 
 Development occurred outside Git. The publication checkout starts at the official tag, preserving that lineage; it does not fabricate individual historical commits for earlier experiments. Firefox Reality informed the adaptations but is not misrepresented as the modern engine baseline.
 

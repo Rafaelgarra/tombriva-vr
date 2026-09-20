@@ -1,24 +1,24 @@
 # Licensing and distribution review
 
-Date: 2026-09-20. Scope: source publication of Vulpis VR, not a signed binary release or Steam Store listing.
+Date: 2026-09-20. Scope: source publication of Tombriva VR, not a signed binary release or Steam Store listing.
 
 ## Source code
 
-The fork retains the upstream `LICENSE`, `toolkit/content/license.html`, component license files and copyright notices. Changes to MPL-covered files remain under MPL 2.0. New Vulpis code uses MPL 2.0 unless a file explicitly states otherwise. No claim is made that every dependency is MPL: individual component notices govern.
+The fork retains the upstream `LICENSE`, `toolkit/content/license.html`, component license files and copyright notices. Changes to MPL-covered files remain under MPL 2.0. New Tombriva code uses MPL 2.0 unless a file explicitly states otherwise. No claim is made that every dependency is MPL: individual component notices govern.
 
 The complete upstream license collection is preserved in the source tree and packaged internal page. Navigation to `about:license` failed in the embedded FxR panel test; the panel instead links to the public README license section. The README includes an index of the entries in that collection; conditional components do not necessarily ship in a Windows build. Release-specific third-party notices must be checked against the actual packaged binaries, not inferred from this source inventory.
 
-OpenVR's BSD-style three-clause license permits source and binary redistribution while retaining its notices, disclaimer, and non-endorsement condition. SteamVR and the PlayStation VR2 App are separately installed dependencies; their proprietary runtimes/installers are not included here. No codecs, downloaded videos, user profiles, Steam credentials or platform installers are part of the Vulpis source import.
+OpenVR's BSD-style three-clause license permits source and binary redistribution while retaining its notices, disclaimer, and non-endorsement condition. SteamVR and the PlayStation VR2 App are separately installed dependencies; their proprietary runtimes/installers are not included here. No codecs, downloaded videos, user profiles, Steam credentials or platform installers are part of the Tombriva source import.
 
 ## Marks and binary distribution
 
-Vulpis VR is an independent project based on Firefox/Gecko with adaptations from Firefox Reality. Mozilla, Valve, Sony and Google do not endorse it. Attribution and upstream source identifiers must remain; product branding is a separate issue from code licensing.
+Tombriva VR is an independent project based on Firefox/Gecko with adaptations from Firefox Reality. Mozilla, Valve, Sony and Google do not endorse it. Attribution and upstream source identifiers must remain; product branding is a separate issue from code licensing.
 
 A public binary release still requires completing branding across executable metadata, installer, settings and update configuration. Publishing this fork does not certify the existing development executable as distribution-ready. Use of modified Firefox binaries under Mozilla marks requires satisfying Mozilla's distribution policy or authorization. Do not ship this development build as an official Firefox release.
 
 ## Artwork
 
-The maintainer reports that the Vulpis SVG was generated with Gemini for this project. The maintainer authorizes CC0 1.0 for any rights held in the logo, without requiring attribution; see `vulpis/assets/LICENSE.md`. This is separate from code licensing; generation does not establish exclusive rights or a trademark clearance.
+The current cat logo and the historical logo are covered separately by the maintainer's CC0 dedication; see `tombriva/assets/LICENSE.md`. The current cat design uses a user-provided cat photo as reference. No source photo is published. This is not a trademark clearance.
 
 The original controller tutorial images were generated from a third-party photograph at heypoorplayer.com. No redistribution license for the source photograph was established. Those images, and the derived transparent sprite, are excluded from the public source import. The public tutorial uses a separately constructed generic trigger diagram, without tracing the supplied photograph.
 

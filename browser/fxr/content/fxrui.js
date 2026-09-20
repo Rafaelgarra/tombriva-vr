@@ -9,9 +9,9 @@
 let homeURL = Services.prefs.getStringPref("vulpis.startup.homepage", "https://www.google.com/");
 // Bug 1586294 - Localize the privacy policy URL (Services.urlFormatter?)
 let privacyPolicyURL = "https://www.mozilla.org/en-US/privacy/firefox/";
-let reportIssueURL = "https://github.com/Rafaelgarra/vulpis-vr/issues";
+let reportIssueURL = "https://github.com/Rafaelgarra/tombriva-vr/issues";
 let licenseURL =
-  "https://github.com/Rafaelgarra/vulpis-vr/blob/vulpis-vr/README.md#independence-and-licensing";
+  "https://github.com/Rafaelgarra/tombriva-vr/blob/tombriva-vr/README.md#independence-and-licensing";
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/browser
 let browser = null;

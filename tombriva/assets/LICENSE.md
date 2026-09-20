@@ -9,10 +9,3 @@ The previous Gemini-generated Vulpis logo (`vulpis-vr.svg`), retained only as hi
 This dedication does not cover Mozilla/Firefox artwork, third-party assets or the excluded controller drawings derived from a third-party photograph. Code and generic tutorial diagrams retain their separate licenses.
 
 [CC0 legal text](https://creativecommons.org/publicdomain/zero/1.0/legalcode)
-
-## Project-created diagrams and icons
-
-The source of `trigger-tutorial.svg`, `icon-projection.svg`, `icon-180sbs.svg` and `icon-180tb.svg` is subject to the Mozilla Public License, v. 2.0. A copy is available at https://mozilla.org/MPL/2.0/ and in the upstream license collection. This notice is provided alongside the assets; it does not relicense third-party assets.
-
-The development record (media track, section 7, item 6) identifies the three projection/180 icons as custom SVGs created for this project. The four icons `icon-2d.svg`, `icon-360.svg`, `icon-stereo360.svg` and `icon-3dsidebyside.svg` were copied from Firefox Reality and retain their MPL headers. This is recorded provenance, not a claim of an exhaustive visual-similarity search.
-
