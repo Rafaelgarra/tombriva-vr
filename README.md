@@ -6,6 +6,8 @@ An experimental spatial browser for viewing compatible 360° and VR180 videos wi
 
 This is a real fork of [Mozilla's Firefox source repository](https://github.com/mozilla-firefox/firefox), based on `FIREFOX_153_2_0esr_RELEASE`. It also includes adaptations informed by [Firefox Reality PC](https://github.com/MozillaReality/gecko-dev). The work started as a personal project to make VR web video usable on PSVR2 and is shared for others facing the same problem.
 
+Vulpis VR is not officially associated with Mozilla or its products. Firefox is a trademark of the Mozilla Foundation in the U.S. and other countries.
+
 **Source preview — there is no validated installer or portable public binary release yet.** The development build has been tested on the maintainer's PSVR2 setup; other PCs, media formats and sites need further testing. This is not a replacement for a maintained general-purpose browser for sensitive browsing.
 
 ## Why PSVR2 is the target
@@ -48,6 +50,10 @@ The new tutorial uses Gecko's native Fluent/DOMLocalization APIs and follows the
 The `vulpis-vr` branch contains the imported modifications on the official base tag. Upstream source and component notices remain intact. See [import record](vulpis/SOURCE_IMPORT.md) for the exact baseline and verification scope.
 
 The existing build disables the updater. A future update channel must ship only Vulpis builds after testing against updated Gecko versions; do not point it at stock Firefox binaries. Full installer/executable rebranding, security defaults, language packs, long-session testing and clean-PC installation remain release tasks. No automatic compatibility with arbitrary browser or SteamVR updates is claimed.
+
+## Acknowledgements
+
+Vulpis VR builds on the work of **Mozilla and contributors**, and the **Firefox Reality contributors**. Thank you to the developers who created and maintained these projects. See the [Firefox source](https://github.com/mozilla-firefox/firefox), [Firefox Reality PC source](https://github.com/MozillaReality/gecko-dev), and [source import record](vulpis/SOURCE_IMPORT.md) for the lineage. Original copyright and license notices remain in the source tree.
 
 ## Independence and licensing
 
