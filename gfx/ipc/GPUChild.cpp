@@ -34,6 +34,11 @@
 #include "nsIObserverService.h"
 #include "nsIPropertyBag2.h"
 #include "ProfilerParent.h"
+#if defined(XP_WIN)
+#  include <algorithm>
+#  include "FxROverlayInputEvent.h"
+#  include "FxRWindowManager.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -278,6 +283,32 @@ mozilla::ipc::IPCResult GPUChild::RecvNotifyDisableRemoteCanvas() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUChild::RecvNotifyFxrOverlayInput(
+    const FxrOverlayInputEvent& aEvent) {
+#if defined(XP_WIN)
+  // Runs on the UI process's main thread, which is where FxRWindowManager needs
+  // it: it queues the event and pokes the widget with MOZ_WM_OPENVR_EVENT.
+  FxROverlayInputEvent event;
+  event.mType = aEvent.type();
+  event.mX = aEvent.x();
+  event.mY = aEvent.y();
+  event.mButton = aEvent.button();
+  event.mScrollYDelta = aEvent.scrollYDelta();
+  event.mOverlayW = aEvent.overlayW();
+  event.mOverlayH = aEvent.overlayH();
+  event.mFocused = aEvent.focused();
+
+  const nsTArray<uint8_t>& keys = aEvent.keyboardInput();
+  size_t count = std::min(keys.Length(), sizeof(event.mKeyboardInput));
+  for (size_t i = 0; i < count; ++i) {
+    event.mKeyboardInput[i] = (char)keys[i];
+  }
+
+  FxRWindowManager::GetInstance()->OnOverlayInputEvent(event);
+#endif
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult GPUChild::RecvFlushMemory(const nsString& aReason) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
@@ -322,6 +353,14 @@ mozilla::ipc::IPCResult GPUChild::RecvAddMemoryReport(
   if (mMemoryReportRequest) {
     mMemoryReportRequest->RecvReport(aReport);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUChild::RecvNotifyFxrWindowState(
+    const uint32_t& aState) {
+#ifdef XP_WIN
+  FxRWindowManager::GetInstance()->OnWindowState(aState);
+#endif
   return IPC_OK();
 }
 

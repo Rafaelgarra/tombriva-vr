@@ -8,6 +8,15 @@ imply_option("MOZ_SERVICES_SYNC", True)
 imply_option("MOZ_DEDICATED_PROFILES", True)
 imply_option("MOZ_BLOCK_PROFILE_DOWNGRADE", True)
 imply_option("MOZ_NORMANDY", True)
+
+option(
+    "--enable-fxr-desktop",
+    env="MOZ_FXR_DESKTOP",
+    default=False,
+    help="Enable Firefox Reality Desktop integration",
+)
+set_config("MOZ_FXR_DESKTOP", depends_if("--enable-fxr-desktop")(lambda _: True))
+set_define("MOZ_FXR_DESKTOP", depends_if("--enable-fxr-desktop")(lambda _: True))
 imply_option("MOZ_PROFILE_MIGRATOR", True)
 
 

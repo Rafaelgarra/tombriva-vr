@@ -1,3 +1,9 @@
+#ifndef VRSUBMIT_LOG_DEFINED
+#  define VRSUBMIT_LOG_DEFINED
+#  include "mozilla/Logging.h"
+static mozilla::LazyLogModule gVRSubmitLog("VRSubmit");
+#  define VRSUBMIT_LOG(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Info, (__VA_ARGS__))
+#endif
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -98,6 +104,10 @@ mozilla::ipc::IPCResult VRParent::RecvRequestMemoryReport(
 }
 
 void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
+  // Por que o processo VR encerra. O vrserver do SteamVR so diz "broken
+  // from the other end", isto e, que fomos nos que fechamos -- sem dizer
+  // por que. aWhy distingue queda de encerramento normal.
+  VRSUBMIT_LOG("[VRParent::ActorDestroy] aWhy=%d (0=Normal,1=Abnormal,2=Deletion,3=Error)", (int)aWhy);
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down VR process early due to a crash!");
     ipc::ProcessChild::QuickExit();

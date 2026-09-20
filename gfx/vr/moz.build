@@ -5,6 +5,7 @@
 EXPORTS += [
     "external_api/moz_external_vr.h",
     "FxROutputHandler.h",
+    "FxROverlayInputEvent.h",
     "FxRWindowManager.h",
     "gfxVR.h",
     "ipc/VRChild.h",
@@ -77,7 +78,7 @@ IPDL_SOURCES = [
 ]
 
 # For now, only enable FxR CLH for Windows Nightly builds (BUG 1565349)
-if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["NIGHTLY_BUILD"]:
+if CONFIG["OS_ARCH"] == "WINNT" and (CONFIG["NIGHTLY_BUILD"] or CONFIG["MOZ_FXR_DESKTOP"]):
     XPCOM_MANIFESTS += [
         "components.conf",
     ]

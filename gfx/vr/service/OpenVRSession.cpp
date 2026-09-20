@@ -1,3 +1,14 @@
+#ifndef VRSUBMIT_LOG_DEFINED
+#  define VRSUBMIT_LOG_DEFINED
+#  include "mozilla/Logging.h"
+// Diagnostico da submissao de quadros WebXR. MOZ_LOG e nao fopen: a macro
+// artesanal anterior gravava direto num caminho absoluto, o que o sandbox do
+// processo de conteudo bloqueia -- o log ficava cego justamente no processo que
+// mais precisavamos observar. MOZ_LOG funciona em todos os processos.
+static mozilla::LazyLogModule gVRSubmitLog("VRSubmit");
+#  define VRSUBMIT_LOG(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Info, (__VA_ARGS__))
+#  define VRSUBMIT_LOG_VERBOSE(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
+#endif
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1044,6 +1055,18 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
     }
     VRControllerState& controllerState = aState.controllerState[stateIndex];
     controllerState.hand = GetControllerHandFromControllerRole(role);
+    if (!mControllerMapper) {
+      // Etapa 1C: controle de tipo que GetControllerDeviceId nao reconhece
+      // (os Sense do PSVR2 caem em "OpenVR Undefined" / _empty) nao criava
+      // mapper, e a chamada abaixo derreferenciava nulo -- o processo VR
+      // cairia no primeiro quadro com o controle registrado. O mapper padrao
+      // evita a queda; o mapeamento especifico dos Sense vem depois, com dados.
+      mControllerMapper = MakeUnique<OpenVRDefaultMapper>();
+      fprintf(stderr,
+              "[OpenVRSession 1C] mapper padrao criado para controle de tipo "
+              "nao reconhecido\n");
+      fflush(stderr);
+    }
     mControllerMapper->UpdateButtons(controllerState, mControllerHand[role]);
     SetControllerSelectionAndSqueezeFrameId(
         controllerState, aState.displayState.lastSubmittedFrameId);
@@ -1305,24 +1328,39 @@ bool OpenVRSession::SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
   bounds.uMax = aLeftEyeRect.x + aLeftEyeRect.width;
   bounds.vMax = 1.0 - (aLeftEyeRect.y + aLeftEyeRect.height);
 
-  ::vr::EVRCompositorError err;
-  err = mVRCompositor->Submit(::vr::EVREye::Eye_Left, &tex, &bounds);
-  if (err != ::vr::EVRCompositorError::VRCompositorError_None) {
-    printf_stderr("OpenVR Compositor Submit() failed.\n");
-  }
+  const auto leftError =
+      mVRCompositor->Submit(::vr::EVREye::Eye_Left, &tex, &bounds);
 
   bounds.uMin = aRightEyeRect.x;
   bounds.vMin = 1.0 - aRightEyeRect.y;
   bounds.uMax = aRightEyeRect.x + aRightEyeRect.width;
   bounds.vMax = 1.0 - (aRightEyeRect.y + aRightEyeRect.height);
 
-  err = mVRCompositor->Submit(::vr::EVREye::Eye_Right, &tex, &bounds);
-  if (err != ::vr::EVRCompositorError::VRCompositorError_None) {
-    printf_stderr("OpenVR Compositor Submit() failed.\n");
+  const auto rightError =
+      mVRCompositor->Submit(::vr::EVREye::Eye_Right, &tex, &bounds);
+  const bool success =
+      leftError == ::vr::EVRCompositorError::VRCompositorError_None &&
+      rightError == ::vr::EVRCompositorError::VRCompositorError_None;
+  static uint64_t sFailedSubmissions = 0;
+  if (!success && (++sFailedSubmissions <= 10 || sFailedSubmissions % 300 == 0)) {
+    VRSUBMIT_LOG("[OpenVR] frame rejected: left=%d right=%d failures=%llu",
+                 int(leftError), int(rightError),
+                 (unsigned long long)sFailedSubmissions);
   }
-
   mVRCompositor->PostPresentHandoff();
-  return true;
+  static uint32_t timingSamples = 0;
+  if (++timingSamples % 90 == 0 &&
+      MOZ_LOG_TEST(gVRSubmitLog, mozilla::LogLevel::Info)) {
+    vr::Compositor_FrameTiming timing{};
+    timing.m_nSize = sizeof(timing);
+    if (mVRCompositor->GetFrameTiming(&timing)) {
+      VRSUBMIT_LOG("[FxR perf] SteamVR sample frame=%u gpuMs=%.3f compositorGpuMs=%.3f presents=%u dropped=%u reprojection=%u",
+                   timing.m_nFrameIndex, timing.m_flTotalRenderGpuMs,
+                   timing.m_flCompositorRenderGpuMs, timing.m_nNumFramePresents,
+                   timing.m_nNumDroppedFrames, timing.m_nReprojectionFlags);
+    }
+  }
+  return success;
 }
 
 void OpenVRSession::StopPresentation() {

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+<linearGradient id="orbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE"/>
+      <stop offset="100%" stop-color="#7F00FF"/>
+    </linearGradient>
+    <linearGradient id="foxAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF512F"/>
+      <stop offset="100%" stop-color="#F09819"/>
+    </linearGradient>
+  </defs>
+
+<!-- Anel Tridimensional / Lente do Headset -->
+  <circle cx="256" cy="256" r="160" stroke="url(#orbitGrad)" stroke-width="24" fill="none" opacity="0.45" stroke-dasharray="700 80"/>
+
+  <!-- Geometria do Visor / Silhueta Vulpina -->
+  <path d="M 160 210 L 256 150 L 352 210 L 320 310 L 256 350 L 192 310 Z" 
+        fill="none" 
+        stroke="url(#orbitGrad)" 
+        stroke-width="28" 
+        stroke-linejoin="round" 
+        stroke-linecap="round"/>
+
+  <!-- Ponto Focal / Conexão Web (Acento Quente) -->
+  <circle cx="256" cy="256" r="26" fill="url(#foxAccent)"/>
+  <circle cx="256" cy="256" r="38" stroke="url(#foxAccent)" stroke-width="4" fill="none" opacity="0.6"/>
+</svg>

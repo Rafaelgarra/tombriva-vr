@@ -2,9 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#if defined(NIGHTLY_BUILD)
+#if defined(NIGHTLY_BUILD) || defined(MOZ_FXR_DESKTOP)
 browser.jar:
+   content/browser/fxr/locales/en-US/onboarding.ftl (locales/en-US/onboarding.ftl)
+   content/browser/fxr/locales/pt-BR/onboarding.ftl (locales/pt-BR/onboarding.ftl)
 %  content fxr %content/browser/fxr/
+   content/browser/fxr/vulpis-onboarding.js     (content/vulpis-onboarding.js)
+   content/browser/fxr/vulpis-onboarding.css    (content/vulpis-onboarding.css)
+   content/browser/fxr/assets/trigger-tutorial.svg (content/assets/trigger-tutorial.svg)
    content/browser/fxr/common.css               (content/common.css)
    content/browser/fxr/common.js                (content/common.js)
    content/browser/fxr/fxrui.html               (content/fxrui.html)
@@ -12,11 +17,15 @@ browser.jar:
    content/browser/fxr/fxrui_blue.css           (content/fxrui_blue.css)
    content/browser/fxr/fxrui.js                 (content/fxrui.js)
    content/browser/fxr/fxr-fullScreen.js        (content/fxr-fullScreen.js)
+   content/browser/fxr/fxr-transport-controls.html  (content/fxr-transport-controls.html)
+   content/browser/fxr/fxr-transport-controls.css   (content/fxr-transport-controls.css)
+   content/browser/fxr/fxr-transport-controls.js    (content/fxr-transport-controls.js)
    content/browser/fxr/permissions.js           (content/permissions.js)
    content/browser/fxr/prefs.html               (content/prefs.html)
    content/browser/fxr/prefs.css                (content/prefs.css)
    content/browser/fxr/prefs.js                 (content/prefs.js)
 
+   content/browser/fxr/assets/vulpis-vr.svg              (content/assets/vulpis-vr.svg)
    content/browser/fxr/assets/icon-backward.svg         (content/assets/icon-backward.svg)
    content/browser/fxr/assets/icon-forward.svg          (content/assets/icon-forward.svg)
    content/browser/fxr/assets/icon-home.svg             (content/assets/icon-home.svg)

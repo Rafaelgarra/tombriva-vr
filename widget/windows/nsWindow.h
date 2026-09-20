@@ -60,6 +60,7 @@
 class nsNativeDragTarget;
 class nsIRollupListener;
 class imgIContainer;
+class FxRWindowManager;
 
 namespace mozilla {
 class WidgetMouseEvent;
@@ -665,6 +666,7 @@ class nsWindow final : public nsIWidget {
   LayoutDeviceIntRegion GetRegionToPaint(const PAINTSTRUCT& ps, HDC aDC) const;
 
   void CreateCompositor() override;
+  void CreateCompositor(int aWidth, int aHeight) override;
   void DestroyCompositor() override;
   void RequestFxrOutput() override;
 
@@ -933,6 +935,10 @@ class nsWindow final : public nsIWidget {
   nsString mDesktopId MOZ_GUARDED_BY(mozilla::sMainThreadCapability);
 
   friend class nsWindowGfx;
+
+  // Turns OpenVR overlay input into real widget events on the UI thread, via
+  // DispatchMouseEvent / Process*Message. See MOZ_WM_OPENVR_EVENT.
+  friend class FxRWindowManager;
 
   static constexpr int kHiddenTaskbarSize = 2;
 };

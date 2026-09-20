@@ -43,6 +43,11 @@ class VRProcessManager final : public VRProcessParent::Listener {
                         mozilla::ipc::Endpoint<PVRGPUChild>* aOutVRBridge);
 
   VRChild* GetVRChild();
+#if defined(XP_WIN)
+  base::ProcessHandle GetVRProcessHandle() {
+    return mProcess ? mProcess->GetChildProcessHandle() : nullptr;
+  }
+#endif
   // If a VR process is present, create a MemoryReportingProcess object.
   // Otherwise, return null.
   RefPtr<MemoryReportingProcess> GetProcessMemoryReporter();

@@ -54,6 +54,22 @@ struct LayerTreeIdMapping {
   ProcessId ownerId;
 };
 
+// One OpenVR overlay input event, polled off the SteamVR overlay on the GPU
+// process's Renderer thread and forwarded to the UI process, where
+// FxRWindowManager turns it into a real Gecko widget event. Mirrors
+// FxROverlayInputEvent in gfx/vr/FxROverlayInputEvent.h.
+struct FxrOverlayInputEvent {
+  uint32_t type;         // vr::EVREventType
+  float x;               // overlay texture px, OpenVR bottom-left origin
+  float y;
+  uint32_t button;       // vr::EVRMouseButton bitmask
+  float scrollYDelta;
+  uint32_t overlayW;     // overlay texture size, i.e. the space x/y are in
+  uint32_t overlayH;
+  uint8_t[] keyboardInput;  // VREvent_Keyboard_t::cNewInput, UTF-8
+  bool focused;             // VREvent_OverlayFocusChanged: is it our overlay?
+};
+
 // This protocol allows the UI process to talk to the GPU process. There is one
 // instance of this protocol, with the GPUParent living on the main thread of
 // the GPU process and the GPUChild living on the main thread of the UI process.
@@ -135,7 +151,23 @@ parent:
   // Causes the GPU process to crash. Used for tests and diagnostics.
   async CrashProcess();
 
+  // Firefox Reality: raise or dismiss the SteamVR virtual keyboard. Sent when
+  // an editable field in the FxR window gains/loses focus. Only the process
+  // that created the overlay may talk to it, hence the round trip.
+  async ShowFxrVirtualKeyboard(bool aShow);
+
+  // Firefox Reality: change how the browser texture is projected in the
+  // headset (flat, 360, stereo...). Sent when fullscreen media declares a
+  // projection. Same round trip as above, and for the same reason: the
+  // overlay belongs to the GPU process. Value is FxRProjectionMode.
+  async SetFxrProjectionMode(uint32_t aMode);
+  async SetFxrWindowDocked(bool aDocked);
+
 child:
+  // Firefox Reality: an input event from the OpenVR overlay's laser pointer.
+  async NotifyFxrOverlayInput(FxrOverlayInputEvent aEvent);
+  async NotifyFxrWindowState(uint32_t aState);
+
   // Sent when APZ detects checkerboarding and apz checkerboard reporting is enabled.
   async ReportCheckerboard(uint32_t severity, nsCString log);
 

@@ -108,10 +108,13 @@ already_AddRefed<Promise> XRSystem::IsSessionSupported(XRSessionMode aMode,
     return promise.forget();
   }
 
-  if (mIsSessionSupportedRequests.IsEmpty()) {
-    gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-    vm->DetectRuntimes();
+  if (!gfx::VRManagerChild::IsCreated()) {
+    promise->MaybeRejectWithAbortError("The XR connection is restarting.");
+    return promise.forget();
   }
+  gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+  vm->AddListener(this);
+  vm->DetectRuntimes();
 
   RefPtr<IsSessionSupportedRequest> request =
       new IsSessionSupportedRequest(aMode, promise);
@@ -214,9 +217,36 @@ already_AddRefed<Promise> XRSystem::RequestSession(
 void XRSystem::QueueSessionRequestWithEnumeration(
     RequestSessionRequest* aRequest) {
   MOZ_ASSERT(aRequest->WantsHardware());
+  if (!gfx::VRManagerChild::IsCreated()) {
+    if (aRequest->IsImmersive()) {
+      mPendingImmersiveSession = false;
+    }
+    aRequest->mPromise->MaybeRejectWithAbortError("The XR connection is restarting.");
+    return;
+  }
   mRequestSessionRequestsWaitingForRuntimeDetection.AppendElement(aRequest);
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+  // A GPU restart replaces the actor without recreating navigator.xr.
+  vm->AddListener(this);
   vm->DetectRuntimes();
+}
+
+void XRSystem::CancelPendingSession() {
+  auto cancel = [](auto& requests) {
+    for (size_t i = requests.Length(); i > 0; --i) {
+      if (requests[i - 1]->IsImmersive()) {
+        RefPtr<RequestSessionRequest> request = requests[i - 1];
+        requests.RemoveElementAt(i - 1);
+        request->mPromise->MaybeRejectWithAbortError("XR session request cancelled.");
+      }
+    }
+  };
+  cancel(mRequestSessionRequestsWaitingForRuntimeDetection);
+  cancel(mRequestSessionRequestsWaitingForEnumeration);
+  mPendingImmersiveSession = false;
+  if (mRequestSessionRequestsWaitingForEnumeration.IsEmpty()) {
+    mEnumerationInFlight = false;
+  }
 }
 
 void XRSystem::QueueSessionRequestWithoutEnumeration(

@@ -36,6 +36,10 @@
 // fullscreen window-state update handler in Windows 10+. (See bug 1835851.)
 #define MOZ_WM_FULLSCREEN_STATE_UPDATE (WM_APP + 0x0318)
 
+// Works with FxRWindowManager to ensure that UI events polled from the OpenVR
+// overlay input path are processed on the Firefox UI thread.
+#define MOZ_WM_OPENVR_EVENT (WM_APP + 0x0320)
+
 // XXX Should rename them to MOZ_WM_* and use safer values!
 // Messages for fullscreen transition window
 #define WM_FULLSCREEN_TRANSITION_BEFORE (WM_USER + 0)

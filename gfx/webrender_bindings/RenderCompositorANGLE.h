@@ -141,6 +141,10 @@ class RenderCompositorANGLE final : public RenderCompositor {
   bool WaitForPreviousGraphicsCommandsFinishedQuery(bool aWaitAll = false);
   bool ResizeBufferIfNeeded();
   bool CreateEGLSurface();
+  // Firefox Reality: render into a texture we own instead of a window's
+  // swapchain backbuffer, so the overlay does not depend on the desktop
+  // window presenting. Same pattern as DCLayerDCompositionTexture.
+  bool CreateFxrOffscreenSurface(const LayoutDeviceIntSize& aSize);
   void DestroyEGLSurface();
   ID3D11Device* GetDeviceOfEGLDisplay(nsACString& aError);
   bool CreateSwapChain(nsACString& aError);
@@ -180,6 +184,14 @@ class RenderCompositorANGLE final : public RenderCompositor {
   bool mFirstPresent = true;
   // Wether we're currently using alpha.
   bool mSwapChainUsingAlpha = false;
+
+  // Firefox Reality offscreen mode: decided once in Initialize() from the
+  // fxr.offscreen-render pref. A pref rather than HasFxrOutputHandler()
+  // because the handler is created by an IPC message that races with
+  // compositor setup, and this decision must be stable for the whole
+  // lifetime of the compositor.
+  bool mFxrOffscreenMode = false;
+  RefPtr<ID3D11Texture2D> mFxrOffscreenTexture;
   RefPtr<layers::FenceD3D11> mFence;
 };
 

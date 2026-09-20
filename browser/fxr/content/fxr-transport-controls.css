@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Deliberately text buttons rather than icons: the legacy stylesheet pointed at
+ * assets (icon-2d.svg, icon-360.svg, ...) that never existed in the tree, so
+ * those buttons rendered blank. Text also survives the overlay's resampling
+ * better than small glyphs. */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0c0c0d;
+  color: #fff;
+  font: 28px system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.transport_container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100vh;
+  padding: 0 16px;
+}
+
+.tbtn {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 72%;
+  border: 2px solid #3a4a6b;
+  border-radius: 10px;
+  background: #243049;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tbtn:hover {
+  background: #34507f;
+  border-color: #5b7fc7;
+}
+
+.tbtn:active {
+  background: #1b2438;
+}
+
+.tbtn_exit {
+  background: #5a2331;
+  border-color: #8c3a4e;
+}
+
+.tbtn_exit:hover {
+  background: #7d3144;
+}

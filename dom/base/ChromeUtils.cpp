@@ -102,6 +102,16 @@
 #  include "mozilla/java/GeckoAppShellWrappers.h"
 #endif
 
+#if defined(XP_WIN)
+// Declared here rather than including gfx/vr/FxRWindowManager.h: that header
+// pulls in windows.h and openvr.h, which do not survive this file's unified
+// build. Defined in gfx/vr/FxRWindowManager.cpp.
+namespace mozilla::gfx {
+void FxRSetProjectionMode(const nsAString& aMode);
+void FxRSetWindowDocked(bool aDocked);
+}  // namespace mozilla::gfx
+#endif
+
 namespace mozilla::dom {
 
 // Setup logging
@@ -2880,6 +2890,19 @@ void ChromeUtils::AndroidMoveTaskToBack(GlobalObject& aGlobal) {
 #endif
 }
 
+/* static */
+void ChromeUtils::SetFxrProjectionMode(const GlobalObject& aGlobal,
+                                       const nsAString& aMode) {
+#if defined(XP_WIN)
+  // Chrome-only and parent-process only: FxRWindowManager lives there and
+  // forwards to the GPU process, which owns the overlay (ADR-02).
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+  ::mozilla::gfx::FxRSetProjectionMode(aMode);
+#endif
+}
+
 already_AddRefed<nsIContentSecurityPolicy> ChromeUtils::CreateCSPFromHeader(
     GlobalObject& aGlobal, const nsAString& aHeader, nsIURI* aSelfURI,
     nsIPrincipal* aLoadingPrincipal, ErrorResult& aRv) {
@@ -3061,4 +3084,12 @@ void ChromeUtils::ValidateServiceWorkerScope(GlobalObject&,
   ServiceWorkerScopeIsValid(aPrincipal, aScopeURI, aRv);
 }
 
+}  // namespace mozilla::dom
+
+namespace mozilla::dom {
+void ChromeUtils::SetFxrWindowDocked(const GlobalObject&, bool aDocked) {
+#ifdef XP_WIN
+  if (XRE_IsParentProcess()) ::mozilla::gfx::FxRSetWindowDocked(aDocked);
+#endif
+}
 }  // namespace mozilla::dom

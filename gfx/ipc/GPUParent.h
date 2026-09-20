@@ -122,6 +122,11 @@ class GPUParent final : public PGPUParent {
 
   mozilla::ipc::IPCResult RecvCrashProcess();
 
+  mozilla::ipc::IPCResult RecvShowFxrVirtualKeyboard(const bool& aShow);
+  mozilla::ipc::IPCResult RecvSetFxrProjectionMode(const uint32_t& aMode);
+
+  mozilla::ipc::IPCResult RecvSetFxrWindowDocked(const bool& aDocked);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

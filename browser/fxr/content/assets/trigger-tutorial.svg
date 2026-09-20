@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 280">
+  <!-- SPDX-License-Identifier: MPL-2.0
+       Original generic trigger diagram for Vulpis VR; not traced from a device photograph. -->
+  <defs>
+    <g id="controller" fill="#263d4d" stroke="#deedf4" stroke-width="5" stroke-linejoin="round">
+      <path d="M102 62h110q26 0 31 25l18 113q3 19-13 21l-29 3q-12 1-20-12l-38-64h-34q-25 0-25-25Z"/>
+      <path d="M113 60v-9q0-8 8-8h28q8 0 8 8v9"/>
+      <circle cx="207" cy="84" r="7" fill="#75dbea" stroke="none"/>
+    </g>
+  </defs>
+  <use href="#controller"/>
+  <path d="M102 88 76 103l6 49q2 11 10 8l22-17Z" fill="#192c39" stroke="#deedf4" stroke-width="5" stroke-linejoin="round"/>
+  <g transform="translate(360)">
+    <use href="#controller"/>
+    <path d="M102 88 91 108l10 39q2 7 8 1l11-14Z" fill="#54c9d9" stroke="#b0f4fc" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M37 131h38m-12-12 13 12-13 12" fill="none" stroke="#54c9d9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g transform="translate(720)">
+    <use href="#controller"/>
+    <path d="M102 88 76 103l6 49q2 11 10 8l22-17Z" fill="#192c39" stroke="#deedf4" stroke-width="5" stroke-linejoin="round"/>
+    <path d="m187 127 24-10q8-3 12 7l15 41q3 10-5 14l-14 6Z" fill="#192c39" stroke="#deedf4" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <g transform="translate(1080)">
+    <use href="#controller"/>
+    <path d="M102 88 76 103l6 49q2 11 10 8l22-17Z" fill="#192c39" stroke="#deedf4" stroke-width="5" stroke-linejoin="round"/>
+    <path d="m184 127 18-7q8-3 12 7l13 35q3 10-5 14l-13 5Z" fill="#54c9d9" stroke="#b0f4fc" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M293 151h-39m12-12-13 12 13 12" fill="none" stroke="#54c9d9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

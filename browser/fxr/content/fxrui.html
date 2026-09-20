@@ -10,17 +10,45 @@
 <!-- 1280x720 chosen for default 16:9 ratio -->
 <html width="1280" height="720">
   <head>
-    <title>Firefox Reality</title>
+    <title>Vulpis VR</title>
     <link rel="stylesheet" href="common.css" />
     <link rel="stylesheet" href="fxrui.css" />
     <link rel="stylesheet" href="fxrui_blue.css" />
     <script src="common.js"></script>
     <script src="permissions.js"></script>
     <script src="fxrui.js"></script>
+    <link rel="stylesheet" href="vulpis-onboarding.css" />
+    <script src="vulpis-onboarding.js"></script>
   </head>
 
   <body>
+    <div id="eWindowTools" class="window_tools">
+      <span id="eWindowLocation" role="status">Menu SteamVR</span>
+      <span id="eWindowHint" role="status"></span>
+      <div class="window_actions">
+        <button id="eWindowDock" title="Soltar janela" aria-label="Soltar janela">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 3h9a2 2 0 0 1 2 2v9h-5M10 3v5M8 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-3"/>
+            <path class="dock_arrow" d="m8 16 8-8m-5 0h5v5"/>
+          </svg>
+        </button>
+        <button id="eWindowClose" title="Fechar navegador" aria-label="Fechar navegador">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    </div>
     <div id="eBrowserContainer" class="browser_container"></div>
+
+    <!-- Floating Media Projection HUD (active in fullscreen & toggleable) -->
+    <div id="eMediaProjectionBar" class="media_projection_bar" hidden>
+      <div class="projection_pill">
+        <button id="eProjExit" class="icon_container icon_backward proj_btn" title="Voltar ao navegador" aria-label="Voltar ao navegador"></button>
+        <button id="eProj2D" class="icon_container proj_btn proj_label active" title="Painel normal">Painel</button>
+        <button id="eProj180SBS" class="icon_container proj_btn proj_label" title="VR180 por geometria da mídia">VR180</button>
+        <button id="eProj360" class="icon_container proj_btn proj_label" title="Vídeo 360 graus">360°</button>
+        <button id="eProjCinema" class="icon_container proj_btn proj_label" title="Tela cinema curva e ampliada">Cinema</button>
+      </div>
+    </div>
 
     <div class="navbar_container">
       <button id="eBack" class="icon_container icon_backward"></button>
@@ -48,6 +76,7 @@
         />
         <input class="urlbar_input" id="eUrlInput" type="text" value="" />
       </div>
+      <button id="eMediaProjectionToggle" class="icon_container icon_projection" title="Controles de Projeção Imersiva"></button>
       <button id="ePrefs" class="icon_container icon_prefs"></button>
     </div>
   </body>

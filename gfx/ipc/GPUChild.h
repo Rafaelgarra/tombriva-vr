@@ -76,6 +76,8 @@ class GPUChild final : public mozilla::ipc::CrashReporterHelper<GPUChild>,
   mozilla::ipc::IPCResult RecvRecordDiscardedData(
       const DiscardedData& aDiscardedData);
 
+  mozilla::ipc::IPCResult RecvNotifyFxrWindowState(const uint32_t& aState);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
   mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError);
   mozilla::ipc::IPCResult RecvFlushActiveCheckerboardReportsDone();
@@ -85,6 +87,8 @@ class GPUChild final : public mozilla::ipc::CrashReporterHelper<GPUChild>,
   mozilla::ipc::IPCResult RecvNotifyOverlayInfo(const OverlayInfo aInfo);
   mozilla::ipc::IPCResult RecvNotifySwapChainInfo(const SwapChainInfo aInfo);
   mozilla::ipc::IPCResult RecvNotifyDisableRemoteCanvas();
+  mozilla::ipc::IPCResult RecvNotifyFxrOverlayInput(
+      const FxrOverlayInputEvent& aEvent);
   mozilla::ipc::IPCResult RecvFlushMemory(const nsString& aReason);
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
   mozilla::ipc::IPCResult RecvUpdateFeature(const Feature& aFeature,

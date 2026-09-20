@@ -15,6 +15,9 @@ interface XRSystem : EventTarget {
   [NewObject, NeedsCallerType]
   Promise<XRSession> requestSession(XRSessionMode mode, optional XRSessionInit options = {});
 
+  [ChromeOnly]
+  undefined cancelPendingSession();
+
   // Events
   attribute EventHandler ondevicechange;
 };

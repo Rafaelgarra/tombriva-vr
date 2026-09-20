@@ -5,28 +5,27 @@
 #include "OSKVRManager.h"
 
 #include "FxRWindowManager.h"
-#include "VRShMem.h"
-#include "moz_external_vr.h"
 
 namespace mozilla {
 namespace widget {
 
+// The upstream implementation signalled IME state to an external vrhost process
+// over VRShMem. The standalone FxR desktop shell owns the OpenVR overlay itself,
+// so route this to FxRWindowManager, which raises SteamVR's own keyboard for
+// that overlay.
+
 // static
 void OSKVRManager::ShowOnScreenKeyboard() {
-#ifdef NIGHTLY_BUILD
-  mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-  shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
-                     mozilla::gfx::VRFxEventState::FOCUS);
-#endif  // NIGHTLY_BUILD
+#if defined(NIGHTLY_BUILD) || defined(MOZ_FXR_DESKTOP)
+  FxRWindowManager::GetInstance()->NotifyEditableFocus(true);
+#endif  // NIGHTLY_BUILD || MOZ_FXR_DESKTOP
 }
 
 // static
 void OSKVRManager::DismissOnScreenKeyboard() {
-#ifdef NIGHTLY_BUILD
-  mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-  shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
-                     mozilla::gfx::VRFxEventState::BLUR);
-#endif  // NIGHTLY_BUILD
+#if defined(NIGHTLY_BUILD) || defined(MOZ_FXR_DESKTOP)
+  FxRWindowManager::GetInstance()->NotifyEditableFocus(false);
+#endif  // NIGHTLY_BUILD || MOZ_FXR_DESKTOP
 }
 
 }  // namespace widget

@@ -1,8 +1,20 @@
+#ifndef VRSUBMIT_LOG_DEFINED
+#  define VRSUBMIT_LOG_DEFINED
+#  include "mozilla/Logging.h"
+// Diagnostico da submissao de quadros WebXR. MOZ_LOG e nao fopen: a macro
+// artesanal anterior gravava direto num caminho absoluto, o que o sandbox do
+// processo de conteudo bloqueia -- o log ficava cego justamente no processo que
+// mais precisavamos observar. MOZ_LOG funciona em todos os processos.
+static mozilla::LazyLogModule gVRSubmitLog("VRSubmit");
+#  define VRSUBMIT_LOG(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Info, (__VA_ARGS__))
+#  define VRSUBMIT_LOG_VERBOSE(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
+#endif
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRSession.h"
+#include <stdio.h>
 
 #include "moz_external_vr.h"
 
@@ -104,16 +116,39 @@ bool VRSession::SubmitFrame(
   if (aLayer.textureType ==
       VRLayerTextureType::LayerTextureType_D3D10SurfaceDescriptor) {
     ID3D11Texture2D* dxTexture = nullptr;
+    // Upstream form: the texture is shared as an NT handle (see
+    // SharedSurfaceANGLE.cpp), so it must be opened with OpenSharedResource1
+    // and its lifetime managed by UniquePlatformHandle. The legacy
+    // OpenSharedResource fails on an NT handle.
     mozilla::ipc::FileDescriptor::UniquePlatformHandle handle(
         aLayer.textureHandle);
+    if (!mDevice) {
+      fprintf(stderr, "[VRSession::SubmitFrame] ERROR: mDevice is NULL!\n");
+      fflush(stderr);
+      return false;
+    }
+
+    VRSUBMIT_LOG_VERBOSE("[VRSession] SubmitFrame: handle=%p, mDevice=%p", (void*)handle.get(), mDevice);
     HRESULT hr =
         mDevice->OpenSharedResource1(handle.get(), IID_PPV_ARGS(&dxTexture));
+    VRSUBMIT_LOG_VERBOSE("[VRSession] OpenSharedResource1 hr=0x%08lx, dxTexture=%p", (unsigned long)hr, dxTexture);
     if (SUCCEEDED(hr) && dxTexture != nullptr) {
-      // Similar to LockD3DTexture in TextureD3D11.cpp
       IDXGIKeyedMutex* mutex = nullptr;
-      hr = dxTexture->QueryInterface(IID_PPV_ARGS(&mutex));
-      if (SUCCEEDED(hr)) {
+      HRESULT hrMutex = dxTexture->QueryInterface(IID_PPV_ARGS(&mutex));
+      if (SUCCEEDED(hrMutex) && mutex != nullptr) {
+        const auto waitStart = TimeStamp::Now();
         hr = mutex->AcquireSync(0, 1000);
+        const double waitMs = (TimeStamp::Now() - waitStart).ToMilliseconds();
+        static uint32_t waits = 0, slowWaits = 0;
+        static double worstWaitMs = 0;
+        if (waitMs > worstWaitMs) worstWaitMs = waitMs;
+        if (waitMs > 8.0) ++slowWaits;
+        if (++waits % 300 == 0) {
+          VRSUBMIT_LOG("[FxR perf] VR mutex last300 maxMs=%.3f over8ms=%u",
+                       worstWaitMs, slowWaits);
+          worstWaitMs = 0;
+          slowWaits = 0;
+        }
 #  ifdef MOZILLA_INTERNAL_API
         if (hr == WAIT_TIMEOUT) {
           gfxDevCrash(LogReason::D3DLockTimeout) << "D3D lock mutex timeout";
@@ -121,24 +156,49 @@ bool VRSession::SubmitFrame(
           gfxCriticalNote << "GFX: D3D11 lock mutex abandoned";
         }
 #  endif
-        if (SUCCEEDED(hr)) {
+        if (hr == S_OK) {
           success = SubmitFrame(aLayer, dxTexture);
-          hr = mutex->ReleaseSync(0);
-          if (FAILED(hr)) {
-            NS_WARNING("Failed to unlock the texture");
+          HRESULT hrRelease = mutex->ReleaseSync(0);
+          if (FAILED(hrRelease)) {
+            success = false;
+            fprintf(stderr, "[VRSession::SubmitFrame] Failed to unlock keyed mutex: 0x%08lx\n", (unsigned long)hrRelease);
+            fflush(stderr);
           }
         } else {
-          NS_WARNING("Failed to lock the texture");
+          fprintf(stderr, "[VRSession::SubmitFrame] Failed to acquire keyed mutex: 0x%08lx (timeout=%d)\n", (unsigned long)hr, (hr == (HRESULT)WAIT_TIMEOUT));
+          fflush(stderr);
         }
 
         mutex->Release();
         mutex = nullptr;
+      } else {
+        // Texture does not support KeyedMutex (e.g. fence-based or standard shared texture)
+        // Etapa 1B: com a intermediaria sincronizada do VRManager, este ramo nao
+        // deve mais ser percorrido. Se for, a submissao segue sem sincronizacao
+        // nenhuma -- avisar, com limite, para que isso apareca no teste.
+        static int sUnsyncedSubmits = 0;
+        if (++sUnsyncedSubmits <= 3 || sUnsyncedSubmits % 900 == 0) {
+          fprintf(stderr, "[VRSession::SubmitFrame] AVISO: textura sem keyed mutex submetida sem sincronizacao (%d)\n", sUnsyncedSubmits);
+          fflush(stderr);
+        }
+        hr = S_OK;
+        success = SubmitFrame(aLayer, dxTexture);
       }
 
       dxTexture->Release();
       dxTexture = nullptr;
     } else {
-      NS_WARNING("Failed to open shared texture");
+      static int sOpenFailCount = 0;
+      if (sOpenFailCount++ < 10) {
+        fprintf(stderr, "[VRSession::SubmitFrame] Failed to open shared texture: hr=0x%08lx, handle=%p\n", (unsigned long)hr, (void*)handle.get());
+        fflush(stderr);
+      }
+    }
+
+    static int sSubmitCount = 0;
+    if (++sSubmitCount % 90 == 1) {
+      fprintf(stderr, "[VRSession::SubmitFrame] Frame #%d submitted (success=%d, hr=0x%08lx)\n", sSubmitCount, (int)success, (unsigned long)hr);
+      fflush(stderr);
     }
 
     return SUCCEEDED(hr) && success;

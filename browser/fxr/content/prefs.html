@@ -9,7 +9,7 @@
 
 <html width="800" height="400">
   <head>
-    <title>Firefox Reality Settings</title>
+    <title>Vulpis VR — Configurações</title>
     <link rel="stylesheet" href="common.css" />
     <link rel="stylesheet" href="fxrui_blue.css" />
     <link rel="stylesheet" href="prefs.css" />
@@ -21,7 +21,7 @@
     <div class="settings_header">
       <button id="eCloseSettings" class="plain_button icon_backward"></button>
       <div class="about_container">
-        <img class="fxr_logo" src="assets/icon-logo-settings-preview.png" />
+        <img class="fxr_logo" src="assets/vulpis-vr.svg" alt="Vulpis VR" />
         <div class="version_text" id="eFxrVersion"></div>
         <div class="version_text" id="eFxrDate"></div>
         <div class="version_text" id="eFxVersion"></div>
@@ -37,8 +37,15 @@
       </button>
     </div>
 
-    <div class="settings_title">Settings</div>
+    <div class="settings_title">Vulpis VR — Configurações</div>
     <hr class="divider" />
+    <div class="setting_container">
+      <div class="setting_name">Mostrar janela no desktop
+        <div class="setting_description">Nesta sessão. O navegador continua no VR. Ao reabrir, a janela volta a aparecer.</div>
+      </div>
+      <input id="eDesktopVisible" type="checkbox" class="setting_control_chk" />
+      <label class="setting_control" for="eDesktopVisible"></label>
+    </div>
 
     <div class="setting_container">
       <div class="setting_name">Mozilla's Privacy Policy Page</div>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!--
+  Transport controls for Firefox Reality on Desktop.
+
+  These live in their OWN overlay, positioned below the main panel, because in
+  panorama mode the main overlay becomes a sphere while its mouse mapping still
+  describes a flat panel: the laser stops hitting what the user sees, and the
+  mode buttons inside the page become unreachable. Controls outside the
+  spherical content are the only ones that stay clickable.
+-->
+
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Firefox Reality — Controles</title>
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="fxr-transport-controls.css" />
+  <script src="fxr-transport-controls.js"></script>
+</head>
+<body>
+  <div class="transport_container">
+    <button id="eExitFullScreen" class="tbtn tbtn_exit">Sair</button>
+    <button id="eProjection2D" class="tbtn">2D</button>
+    <button id="eProjection360" class="tbtn">360</button>
+    <button id="eProjection360Stereo" class="tbtn">360 3D</button>
+    <button id="eProjection3D" class="tbtn">SBS</button>
+    <button id="eProjection180SBS" class="tbtn">180 SBS</button>
+    <button id="eProjection180TB" class="tbtn">180 TB</button>
+  </div>
+</body>
+</html>

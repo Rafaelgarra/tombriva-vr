@@ -1,3 +1,14 @@
+#ifndef VRSUBMIT_LOG_DEFINED
+#  define VRSUBMIT_LOG_DEFINED
+#  include "mozilla/Logging.h"
+// Diagnostico da submissao de quadros WebXR. MOZ_LOG e nao fopen: a macro
+// artesanal anterior gravava direto num caminho absoluto, o que o sandbox do
+// processo de conteudo bloqueia -- o log ficava cego justamente no processo que
+// mais precisavamos observar. MOZ_LOG funciona em todos os processos.
+static mozilla::LazyLogModule gVRSubmitLog("VRSubmit");
+#  define VRSUBMIT_LOG(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Info, (__VA_ARGS__))
+#  define VRSUBMIT_LOG_VERBOSE(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
+#endif
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -330,6 +341,8 @@ void VRService::ServiceImmersiveMode() {
   }
 
   uint64_t newFrameId = FrameIDFromBrowserState(mBrowserState);
+  VRSUBMIT_LOG_VERBOSE("[VRService::ServiceImmersiveMode] newFrameId=%llu, lastSubmitted=%llu",
+         (unsigned long long)newFrameId, (unsigned long long)mSystemState.displayState.lastSubmittedFrameId);
   if (newFrameId != mSystemState.displayState.lastSubmittedFrameId) {
     // A new immersive frame has been received.
     // Submit the textures to the VR system compositor.

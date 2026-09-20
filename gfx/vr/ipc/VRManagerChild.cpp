@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRManagerChild.h"
+#include "mozilla/Logging.h"
 
 #include "VRLayerChild.h"
 #include "VRManagerParent.h"
@@ -35,6 +36,7 @@ const nsTArray<RefPtr<mozilla::gfx::VRManagerEventObserver>>::index_type
 namespace mozilla {
 namespace gfx {
 
+static LazyLogModule sFxRRecovery("FxRRecovery");
 static StaticRefPtr<VRManagerChild> sVRManagerChildSingleton;
 static StaticRefPtr<VRManagerParent> sVRManagerParentSingleton;
 
@@ -113,6 +115,8 @@ bool VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint,
     return false;
   }
   sVRManagerChildSingleton = child;
+  MOZ_LOG(sFxRRecovery, LogLevel::Info,
+          ("content bridge created namespace=%u", aNamespace));
   return true;
 }
 
@@ -251,6 +255,9 @@ mozilla::ipc::IPCResult VRManagerChild::RecvUpdateRuntimeCapabilities(
 }
 
 void VRManagerChild::NotifyRuntimeCapabilitiesUpdatedInternal() {
+  MOZ_LOG(sFxRRecovery, LogLevel::Info,
+          ("detected namespace=%u listeners=%zu", mNamespace,
+           mListeners.Length()));
   const nsTArray<RefPtr<VRManagerEventObserver>> listeners = mListeners.Clone();
   for (auto& listener : listeners) {
     listener->NotifyDetectRuntimesCompleted();
@@ -355,7 +362,12 @@ bool VRManagerChild::EnumerateVRDisplays() {
   return success;
 }
 
-void VRManagerChild::DetectRuntimes() { (void)SendDetectRuntimes(); }
+void VRManagerChild::DetectRuntimes() {
+  const bool sent = SendDetectRuntimes();
+  MOZ_LOG(sFxRRecovery, LogLevel::Info,
+          ("detect namespace=%u listeners=%zu sent=%d", mNamespace,
+           mListeners.Length(), sent));
+}
 
 already_AddRefed<VRLayerChild> VRManagerChild::CreateVRLayer(
     uint32_t aDisplayID, uint32_t aGroup) {

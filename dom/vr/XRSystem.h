@@ -103,6 +103,7 @@ class XRSystem final : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XRSystem, DOMEventTargetHelper)
 
   void Shutdown();
+  void CancelPendingSession();
   void SessionEnded(XRSession* aSession);
   bool FeaturePolicyBlocked() const;
   bool OnXRPermissionRequestAllow();

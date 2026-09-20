@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRProcessManager.h"
+#include "mozilla/Logging.h"
 
 #include "VRProcessParent.h"
 #include "VRChild.h"
@@ -17,6 +18,7 @@
 namespace mozilla {
 namespace gfx {
 
+static LazyLogModule sFxRProcessRecovery("FxRRecovery");
 static StaticAutoPtr<VRProcessManager> sSingleton;
 
 /* static */
@@ -56,6 +58,9 @@ VRProcessManager::~VRProcessManager() {
 }
 
 void VRProcessManager::LaunchVRProcess() {
+  MOZ_LOG(sFxRProcessRecovery, LogLevel::Info,
+          ("launch VR existing=%d connected=%d", !!mProcess,
+           mProcess ? mProcess->IsConnected() : false));
   if (mProcess) {
     return;
   }

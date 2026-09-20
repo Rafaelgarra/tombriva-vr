@@ -703,11 +703,11 @@ bool IMEHandler::NeedsSearchInputScope() {
 
 // static
 bool IMEHandler::IsOnScreenKeyboardSupported() {
-#ifdef NIGHTLY_BUILD
+#if defined(NIGHTLY_BUILD) || defined(MOZ_FXR_DESKTOP)
   if (FxRWindowManager::GetInstance()->IsFxRWindow(sFocusedWindow)) {
     return true;
   }
-#endif  // NIGHTLY_BUILD
+#endif  // NIGHTLY_BUILD || MOZ_FXR_DESKTOP
   if (!Preferences::GetBool(kOskEnabled, true) ||
       !IMEHandler::NeedOnScreenKeyboard()) {
     return false;
@@ -741,11 +741,11 @@ void IMEHandler::MaybeShowOnScreenKeyboard(nsWindow* aWindow,
 
 // static
 void IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow, Sync aSync) {
-#ifdef NIGHTLY_BUILD
+#if defined(NIGHTLY_BUILD) || defined(MOZ_FXR_DESKTOP)
   if (FxRWindowManager::GetInstance()->IsFxRWindow(aWindow)) {
     OSKVRManager::DismissOnScreenKeyboard();
   }
-#endif  // NIGHTLY_BUILD
+#endif  // NIGHTLY_BUILD || MOZ_FXR_DESKTOP
   if (aSync == Sync::Yes) {
     DismissOnScreenKeyboard(aWindow);
     return;
@@ -972,12 +972,12 @@ bool IMEHandler::AutoInvokeOnScreenKeyboardInDesktopMode() {
 // Based on DisplayVirtualKeyboard() in Chromium's base/win/win_util.cc.
 // static
 void IMEHandler::ShowOnScreenKeyboard(nsWindow* aWindow) {
-#ifdef NIGHTLY_BUILD
+#if defined(NIGHTLY_BUILD) || defined(MOZ_FXR_DESKTOP)
   if (FxRWindowManager::GetInstance()->IsFxRWindow(sFocusedWindow)) {
     OSKVRManager::ShowOnScreenKeyboard();
     return;
   }
-#endif  // NIGHTLY_BUILD
+#endif  // NIGHTLY_BUILD || MOZ_FXR_DESKTOP
 
   if (IsWin10AnniversaryUpdateOrLater()) {
     OSKInputPaneManager::ShowOnScreenKeyboard(aWindow->GetWindowHandle());

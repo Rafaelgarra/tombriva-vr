@@ -45,3 +45,88 @@ function clearModalContainer() {
 
   return content;
 }
+
+//
+// FxRMediaStub - Media Projection Interface & Logging Stub
+// Bridge between Firefox Reality UI and C++ Projection Subsystem.
+// Approved vocabulary: "2d", "360", "360-stereo", "3d", "180-sbs", "180-tb", "exit"
+//
+
+const FxRMediaStub = {
+  _currentMode: "2d",
+
+  get currentMode() {
+    return this._currentMode;
+  },
+
+  setProjectionMode(aMode) {
+    const validModes = [
+      "2d",
+      "360",
+      "360-stereo",
+      "3d",
+      "3d-sbs",
+      "180-sbs",
+      "180-tb",
+      "curved",
+      "exit",
+    ];
+    let mode = typeof aMode === "string" ? aMode.toLowerCase().trim() : "2d";
+    if (mode === "3d-sbs") {
+      mode = "3d";
+    }
+
+    if (!validModes.includes(mode)) {
+      console.warn(
+        `[FxRMediaStub] Unrecognized projection mode: "${aMode}", defaulting to "2d"`
+      );
+      mode = "2d";
+    }
+
+    if (mode !== "exit") {
+      this._currentMode = mode;
+    }
+
+    const timestamp = new Date().toISOString();
+    console.log(
+      `[FxRMediaStub ${timestamp}] setProjectionMode("${mode}") invoked.`
+    );
+
+    // Call native C++ implementation if present in ChromeUtils:
+    if (
+      typeof ChromeUtils !== "undefined" &&
+      typeof ChromeUtils.setFxrProjectionMode === "function"
+    ) {
+      try {
+        ChromeUtils.setFxrProjectionMode(mode);
+        console.log(
+          `[FxRMediaStub] Dispatched to ChromeUtils.setFxrProjectionMode("${mode}")`
+        );
+      } catch (err) {
+        console.error(
+          `[FxRMediaStub] Exception calling ChromeUtils.setFxrProjectionMode:`,
+          err
+        );
+      }
+    } else {
+      console.log(
+        `[FxRMediaStub] ChromeUtils.setFxrProjectionMode not yet implemented in C++ (stub logging mode)`
+      );
+    }
+
+    // Notify UI listeners of projection change
+    try {
+      if (typeof window !== "undefined" && window.dispatchEvent) {
+        window.dispatchEvent(
+          new CustomEvent("fxr-projection-changed", { detail: { mode } })
+        );
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return mode;
+  },
+};
+
+globalThis.FxRMediaStub = FxRMediaStub;

@@ -13,6 +13,7 @@
 #include "nsIWindowWatcher.h"
 #include "mozIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIDOMWindowInlines.h"
 #include "mozilla/WidgetUtils.h"
 #include "nsIWidget.h"
 #include "nsServiceManagerUtils.h"
@@ -20,6 +21,9 @@
 #include "nsArray.h"
 #include "nsCOMPtr.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 
 #include <windows.h>
 #include "WinUtils.h"
@@ -82,7 +86,7 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
         nullptr,                                        // aParent
         "chrome://fxr/content/fxrui.html"_ns,           // aUrl
         "_blank"_ns,                                    // aName
-        "chrome,dialog=no,all,private,alwaysontop"_ns,  // aFeatures
+        "chrome,dialog=no,all,private"_ns,              // aFeatures
         nullptr,                                        // aArguments
         getter_AddRefs(newWindow));
 
@@ -97,31 +101,27 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
     // changing the related pref would impact all browser window instances.
     newWindowOuter->ForceFullScreenInWidget();
 
-    // Send the window's HWND to vrhost through VRShMem
-    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-    if (shmem.JoinShMem()) {
-      mozilla::gfx::VRWindowState windowState = {0};
-      shmem.PullWindowState(windowState);
+    // This window's content is consumed by the VR overlay, not by the screen,
+    // so it must keep painting even when the desktop window is covered or
+    // hidden. Without this, RecomputeAppWindowVisibility() deactivates the
+    // BrowsingContext and calls PauseOrResumeCompositor(), freezing the
+    // overlay. This is the sanctioned API for exactly that situation.
+    if (mozilla::dom::BrowsingContext* bc =
+            newWindowOuter->GetBrowsingContext()) {
+      if (bc->IsChrome() && bc->IsTop()) {
+        mozilla::IgnoredErrorResult rv;
+        bc->Canonical()->SetForceAppWindowActive(true, rv);
+      }
+    }
 
-      nsCOMPtr<nsIWidget> newWidget =
-          mozilla::widget::WidgetUtils::DOMWindowToWidget(newWindowOuter);
-      HWND hwndWidget = (HWND)newWidget->GetNativeData(NS_NATIVE_WINDOW);
-
-      // The CLH should populate these members first
-      MOZ_ASSERT(windowState.hwndFx == 0);
-      MOZ_ASSERT(windowState.textureFx == nullptr);
-      windowState.hwndFx = (uint64_t)hwndWidget;
-
-      shmem.PushWindowState(windowState);
-      shmem.LeaveShMem();
-
-      // The GPU process will notify the host that window creation is complete
-      // after output data is set in VRShMem
-      newWidget->RequestFxrOutput();
+    // Standalone OpenVR Overlay Bring-Up (Phase 3C.2A)
+    printf_stderr("[FxR-Modern] Initializing Standalone OpenVR Overlay...\n");
+    if (FxRWindowManager::GetInstance()->VRinit()) {
+      FxRWindowManager::GetInstance()->CreateOverlayForWindow();
     } else {
-#ifndef NIGHTLY_BUILD
-      MOZ_CRASH("failed to start with --fxr");
-#endif
+      printf_stderr(
+          "[FxR-Modern] OpenVR initialization failed or SteamVR not active; "
+          "operating in desktop fallback mode.\n");
     }
   }
 

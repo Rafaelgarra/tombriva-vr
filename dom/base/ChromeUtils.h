@@ -48,6 +48,11 @@ class ChromeUtils {
                                      ErrorResult& rv);
 
  public:
+  // Firefox Reality on Desktop; see ChromeUtils.webidl.
+  static void SetFxrProjectionMode(const GlobalObject& aGlobal,
+                                   const nsAString& aMode);
+  static void SetFxrWindowDocked(const GlobalObject& aGlobal, bool aDocked);
+
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static uint64_t GetObjectNodeId(GlobalObject& global,
                                   JS::Handle<JSObject*> aVal);

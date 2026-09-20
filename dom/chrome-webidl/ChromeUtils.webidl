@@ -922,6 +922,24 @@ partial namespace ChromeUtils {
   [ChromeOnly]
   undefined androidMoveTaskToBack();
 
+  /**
+   * Firefox Reality on Desktop: sets how fullscreen media is projected inside
+   * the SteamVR overlay. Called from browser/fxr/content/fxr-fullScreen.js when
+   * a video declares its projection.
+   *
+   * Accepted values: "2d", "360", "360-stereo", "3d" (or "3d-sbs"),
+   * "180-sbs", "180-tb", and "exit" to leave fullscreen. Anything else is
+   * treated as "2d". Note that the 180 modes are approximations: OpenVR has no
+   * 180 overlay flag.
+   *
+   * No-op on platforms and windows without an FxR overlay.
+   */
+  [ChromeOnly]
+  undefined setFxrProjectionMode(DOMString aMode);
+
+  [ChromeOnly]
+  undefined setFxrWindowDocked(boolean aDocked);
+
   [Throws]
   ContentSecurityPolicy createCSPFromHeader(DOMString header, URI selfURI, Principal loadingPrincipal);
 

@@ -1,0 +1,69 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+#vulpis-vr-guide {
+  position: fixed;
+  z-index: 10000;
+  box-sizing: border-box;
+  width: min(420px, 44vw);
+  padding: 18px 22px;
+  border: 1px solid #66d8ee;
+  border-radius: 18px;
+  background: #182632;
+  color: #f0f7fb;
+  box-shadow: 0 8px 24px #0008;
+  font: 16px/1.4 sans-serif;
+}
+#vulpis-vr-guide[hidden] { display: none; }
+#vulpis-vr-guide::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  right: var(--guide-arrow, 24px);
+  width: 16px;
+  height: 16px;
+  background: #182632;
+  border-right: 1px solid #66d8ee;
+  border-bottom: 1px solid #66d8ee;
+  transform: rotate(45deg);
+}
+#vulpis-vr-guide h2 { font-size: 20px; margin: 0 0 8px; }
+#vulpis-vr-guide p { margin: 8px 0; }
+#vulpis-vr-guide .controller-sprite {
+  width: 160px;
+  height: 125px;
+  margin: 0 auto;
+  background: url("assets/trigger-tutorial.svg") left center / 400% 100% no-repeat;
+  animation: vulpis-trigger 1.8s steps(1, end) infinite;
+}
+@keyframes vulpis-trigger {
+  0%, 49% { background-position: left center; }
+  50%, 100% { background-position: 33.333333% center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #vulpis-vr-guide .controller-sprite { animation: none; background-position: right center; }
+}
+#vulpis-vr-guide button {
+  display: block;
+  margin: 12px 0 0 auto;
+  min-height: 44px;
+  padding: 8px 22px;
+  border: 1px solid #72e4fa;
+  border-radius: 10px;
+  background: #294654;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+#vulpis-vr-guide button:hover, #vulpis-vr-guide button:focus-visible { background: #396575; }
+
+#vulpis-vr-guide .guide-gestures { display: flex; gap: 12px; justify-content: center; }
+#vulpis-vr-guide figure { margin: 0; flex: 1; min-width: 0; text-align: center; }
+#vulpis-vr-guide figcaption { font-size: 14px; font-weight: bold; }
+#vulpis-vr-guide .grip { animation-name: vulpis-grip; }
+@keyframes vulpis-grip {
+  0%, 49% { background-position: 66.666667% center; }
+  50%, 100% { background-position: right center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #vulpis-vr-guide .trigger { background-position: 33.333333% center; }
+  #vulpis-vr-guide .grip { animation: none; background-position: right center; }
+}

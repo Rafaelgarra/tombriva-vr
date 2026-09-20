@@ -191,6 +191,8 @@
 
 #include "WindowsUIUtils.h"
 
+#include "FxRWindowManager.h"
+
 #include "nsWindowDefs.h"
 
 #include "nsCrashOnException.h"
@@ -5954,6 +5956,15 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
         TimeConverter().CompensateForBackwardsSkew(::GetMessageTime(),
                                                    skewStamp);
       }
+    } break;
+
+    case MOZ_WM_OPENVR_EVENT: {
+      // Input polled off the SteamVR overlay is queued on another thread; drain
+      // it here so that it is dispatched from the UI thread like any other
+      // mouse or key message.
+      FxRWindowManager::GetInstance()->ProcessOverlayEvents(this);
+      DispatchPendingEvents();
+      result = true;
     } break;
 
     default: {

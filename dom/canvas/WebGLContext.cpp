@@ -91,6 +91,14 @@
 // Generated
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
+#ifndef VRSUBMIT_LOG_DEFINED
+#  define VRSUBMIT_LOG_DEFINED
+#  include "mozilla/Logging.h"
+static mozilla::LazyLogModule gVRSubmitLog("VRSubmit");
+#  define VRSUBMIT_LOG(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Info, (__VA_ARGS__))
+#  define VRSUBMIT_LOG_VERBOSE(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
+#endif
+
 namespace mozilla {
 
 WebGLContextOptions::WebGLContextOptions() {
@@ -1172,6 +1180,8 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
   const auto transferFunction = gfx::TransferFunction::SRGB;
   auto presenter = swapChain.Acquire(fb.mSize, colorSpace, transferFunction);
   if (!presenter) {
+    VRSUBMIT_LOG("[PresentIntoXR] FALHA: Acquire nao devolveu presenter -- "
+                 "contexto sera perdido");
     GenerateWarning("Swap chain surface creation failed.");
     LoseContext();
     return false;
@@ -1503,12 +1513,30 @@ gl::SwapChain* WebGLContext::GetSwapChain(WebGLFramebuffer* const xrFb,
 
 Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
     WebGLFramebuffer* const xrFb, const bool webvr) {
+  if (webvr) {
+    VRSUBMIT_LOG_VERBOSE("[GFB] entrada: contextLost=%d xrFb=%p", (int)IsContextLost(),
+                 (void*)xrFb);
+  }
   auto* swapChain = GetSwapChain(xrFb, webvr);
-  if (!swapChain) return {};
+  if (!swapChain) {
+    if (webvr) VRSUBMIT_LOG("[GFB] FALHA: swapChain nulo");
+    return {};
+  }
   const auto& front = swapChain->FrontBuffer();
-  if (!front) return {};
+  if (!front) {
+    if (webvr) {
+      VRSUBMIT_LOG("[GFB] FALHA: FrontBuffer nulo (factory=%p)",
+                   (void*)swapChain->mFactory.get());
+    }
+    return {};
+  }
 
-  return front->ToSurfaceDescriptor();
+  auto desc = front->ToSurfaceDescriptor();
+  if (webvr && !desc) {
+    VRSUBMIT_LOG("[GFB] FALHA: ToSurfaceDescriptor vazio -- superficie sem "
+                 "descritor compartilhavel (provavel SurfaceFactory_Basic)");
+  }
+  return desc;
 }
 
 Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(

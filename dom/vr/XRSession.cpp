@@ -306,6 +306,18 @@ void XRSession::WillRefresh(mozilla::TimeStamp aTime) {
   }
 }
 
+#ifndef VRSUBMIT_LOG_DEFINED
+#  define VRSUBMIT_LOG_DEFINED
+#  include "mozilla/Logging.h"
+// Diagnostico da submissao de quadros WebXR. MOZ_LOG e nao fopen: a macro
+// artesanal anterior gravava direto num caminho absoluto, o que o sandbox do
+// processo de conteudo bloqueia -- o log ficava cego justamente no processo que
+// mais precisavamos observar. MOZ_LOG funciona em todos os processos.
+static mozilla::LazyLogModule gVRSubmitLog("VRSubmit");
+#  define VRSUBMIT_LOG(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Info, (__VA_ARGS__))
+#  define VRSUBMIT_LOG_VERBOSE(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
+#endif
+
 void XRSession::StartFrame() {
   if (mShutdown || mEnded) {
     return;
@@ -340,6 +352,10 @@ void XRSession::StartFrame() {
 
   baseLayer->EndAnimationFrame();
   frame->EndAnimationFrame();
+  // Controle positivo: este ponto roda no processo de CONTEUDO. Se nao aparecer
+  // no log, o problema e a escrita do log, nao o fluxo de submissao.
+  VRSUBMIT_LOG_VERBOSE("[XRSession::StartFrame] immersive=%d presentation=%p baseLayer=%p",
+         (int)IsImmersive(), (void*)mDisplayPresentation.get(), (void*)baseLayer);
   if (mDisplayPresentation) {
     mDisplayPresentation->SubmitFrame();
   }

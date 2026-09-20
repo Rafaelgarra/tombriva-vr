@@ -144,3 +144,149 @@ body {
 .modal_mask:not([hidden]) {
   background-color: var(--num13_alpha);
 }
+
+
+/* --- Media Projection HUD & Controls --- */
+.icon_projection {
+  background-image: url("assets/icon-projection.svg");
+}
+
+.icon_proj_2D {
+  background-image: url("assets/icon-2d.svg");
+}
+
+.icon_proj_360 {
+  background-image: url("assets/icon-360.svg");
+}
+
+.icon_proj_360S {
+  background-image: url("assets/icon-stereo360.svg");
+}
+
+.icon_proj_3D {
+  background-image: url("assets/icon-3dsidebyside.svg");
+}
+
+.icon_proj_180s {
+  background-image: url("assets/icon-180sbs.svg");
+}
+
+.icon_proj_180tb {
+  background-image: url("assets/icon-180tb.svg");
+}
+
+.media_projection_bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.media_projection_bar[hidden] {
+  display: none !important;
+}
+
+/* In Fullscreen mode, automatically display the media projection HUD */
+:root[inFullScreen] .media_projection_bar {
+  display: flex !important;
+  transition: opacity 250ms;
+}
+
+/* Laser parado ou fora do painel: a barra esmaece e deixa o clique passar
+ * para o video. Qualquer movimento do laser a traz de volta (fxrui.js). */
+:root[inFullScreen] .media_projection_bar.autohidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.projection_pill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background: rgba(29, 46, 59, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 6px 14px;
+  border-radius: 32px;
+  border: 1px solid rgba(86, 217, 246, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.proj_btn {
+  width: 44px;
+  height: 44px;
+  margin: 2px;
+  border-radius: 22px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  background-size: 22px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.proj_btn.proj_label {
+  width: auto;
+  min-width: 68px;
+  padding: 0 12px;
+  background-image: none;
+  color: white;
+  font: 600 14px sans-serif;
+}
+
+.proj_btn.active {
+  border-color: var(--num08);
+  box-shadow: 0 0 12px var(--num08);
+  background-color: var(--num13);
+}
+
+.proj_btn:hover {
+  transform: scale(1.18);
+  border-color: var(--num07);
+}
+
+/* Height and center match AlignTitleBar's normalized panel coordinates. */
+.window_tools {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 0 8vh;
+  height: 8vh;
+  box-sizing: border-box;
+  padding: 0 12px;
+  background: #1b2b37;
+  color: #dbe8ee;
+}
+#eWindowLocation { font-size: 14px; }
+.window_actions { display: flex; gap: 8px; margin-left: auto; }
+.window_tools button {
+  display: grid;
+  place-items: center;
+  width: 6vh;
+  height: 6vh;
+  padding: 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #e9f3f8;
+  background: #304353;
+}
+.window_tools svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.window_tools button:hover { background: #466176; border-color: #58cde1; }
+.window_tools button:active { transform: scale(.94); }
+.window_tools button:disabled { opacity: .45; }
+#eWindowClose { background: #ae2538; }
+#eWindowClose:hover { background: #d53448; }
+#eWindowDock .dock_arrow { stroke: #73dcec; transform-origin: 12px 12px; }
+#eWindowDock[data-docked="false"] .dock_arrow { transform: rotate(180deg); }
+#eWindowHint { position: absolute; left: 12px; top: 100%; max-width: 420px; padding: 8px 12px; border-radius: 6px; background: #1b2b37; font-size: 13px; z-index: 20; pointer-events: none; display: none; }
+.window_tools:has(#eWindowDock:hover) #eWindowHint { display: block; }
+:root[inFullScreen] .window_tools { display: none; }
+.proj_btn:disabled { opacity: 0.45; transform: none; }
+
+#eWindowLocation { display: none; }
+#eWindowTools[data-command-error="true"] #eWindowHint { display: block; }

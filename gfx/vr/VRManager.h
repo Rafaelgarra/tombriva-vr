@@ -17,6 +17,15 @@
 #include "gfxVR.h"
 
 class nsITimer;
+#ifdef XP_WIN
+#  include "mozilla/UniquePtrExtensions.h"
+struct ID3D11Device;
+struct ID3D11Texture2D;
+struct IDXGIKeyedMutex;
+namespace mozilla::layers {
+class FenceD3D11;
+}  // namespace mozilla::layers
+#endif
 namespace mozilla {
 namespace gfx {
 class VRLayerParent;
@@ -142,6 +151,10 @@ class VRManager : nsIObserver {
 
   TimeStamp mLastDisplayEnumerationTime;
   TimeStamp mLastActiveTime;
+#ifdef XP_WIN
+  TimeStamp mFxrLastPresentationEnd;
+  bool mFxrAwaitingExplicitEnumeration = false;
+#endif
   TimeStamp mLastTickTime;
   TimeStamp mEarliestRestartTime;
   TimeStamp mVRNavigationTransitionEnd;
@@ -168,6 +181,38 @@ class VRManager : nsIObserver {
   // pointer so that its lifetime can still be controlled by VRManager
   VRShMem* mShmem;
   bool mVRProcessEnabled;
+#ifdef XP_WIN
+  // Etapa 1B (sincronizacao D3D11). O WebGL compartilha a textura por fence,
+  // sem keyed mutex -- SharedSurfaceANGLE.cpp garante um OU outro, nunca os
+  // dois. O processo VR so sabe sincronizar keyed mutex, entao caia no ramo
+  // sem espera: lia a textura enquanto a GPU ainda escrevia, ou depois de o
+  // produtor ja a ter reciclado. Copiamos para uma intermediaria DESTE
+  // processo, onde o mapa de fences vive: espera o write fence, registra um
+  // read fence e entrega ao processo VR uma textura com keyed mutex.
+  enum class SyncResult : uint8_t {
+    Ok,           // intermediaria pronta; submeter o handle devolvido
+    Unavailable,  // capacidade ausente; manter a submissao direta anterior
+    DropFrame,    // falha neste quadro; nao submeter
+  };
+  SyncResult PrepareSyncedTexture(
+      void* aProducerHandle,
+      const layers::CompositeProcessFencesHolderId& aHolderId,
+      void** aOutHandle);
+  void ResetSyncedTexture();
+
+  // Tocados somente na thread VR_SubmitFrame.
+  RefPtr<ID3D11Device> mSyncDevice;
+  RefPtr<ID3D11Texture2D> mSyncTexture;
+  RefPtr<IDXGIKeyedMutex> mSyncMutex;
+  RefPtr<layers::FenceD3D11> mSyncReadFence;
+  UniqueFileHandle mSyncHandle;
+  uint32_t mSyncWidth = 0;
+  uint32_t mSyncHeight = 0;
+  uint32_t mSyncFormat = 0;
+  bool mSyncUnavailable = false;
+  uint64_t mSyncFrames = 0;
+  uint64_t mSyncDrops = 0;
+#endif
 
 #if !defined(MOZ_WIDGET_ANDROID)
   RefPtr<VRServiceHost> mServiceHost;

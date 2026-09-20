@@ -1,3 +1,14 @@
+#ifndef VRSUBMIT_LOG_DEFINED
+#  define VRSUBMIT_LOG_DEFINED
+#  include "mozilla/Logging.h"
+// Diagnostico da submissao de quadros WebXR. MOZ_LOG e nao fopen: a macro
+// artesanal anterior gravava direto num caminho absoluto, o que o sandbox do
+// processo de conteudo bloqueia -- o log ficava cego justamente no processo que
+// mais precisavamos observar. MOZ_LOG funciona em todos os processos.
+static mozilla::LazyLogModule gVRSubmitLog("VRSubmit");
+#  define VRSUBMIT_LOG(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Info, (__VA_ARGS__))
+#  define VRSUBMIT_LOG_VERBOSE(...) MOZ_LOG(gVRSubmitLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
+#endif
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -23,16 +34,24 @@
 #include <cstring>
 
 #include "ipc/VRLayerParent.h"
+#include "ipc/VRGPUChild.h"
+#include "ipc/VRProcessManager.h"
 #if !defined(MOZ_WIDGET_ANDROID)
 #  include "VRServiceHost.h"
 #endif
 
 #ifdef XP_WIN
+#  include "FxROutputHandler.h"
 #  include "CompositorD3D11.h"
 #  include "TextureD3D11.h"
 #  include <d3d11.h>
 #  include "gfxWindowsPlatform.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
+#  include <cstdio>
+#  include <d3d11_1.h>
+#  include <dxgi1_2.h>
+#  include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
+#  include "mozilla/layers/FenceD3D11.h"
 #elif defined(XP_MACOSX)
 #  include "mozilla/gfx/MacIOSurface.h"
 #  include <errno.h>
@@ -455,6 +474,24 @@ void VRManager::Run100msTasks() {
 }
 
 void VRManager::CheckForInactiveTimeout() {
+#ifdef XP_WIN
+  // XR listeners outlive sessions. Release only the scene service, and do
+  // not let those passive listeners immediately enumerate it again.
+  if (FxROutputHandler::HasActiveHandler() &&
+      mState == VRManagerState::Active && mLayers.IsEmpty() &&
+      !mBrowserState.presentationActive && !mEnumerationRequested &&
+      !mRuntimeDetectionRequested && !mFxrLastPresentationEnd.IsNull() &&
+      (TimeStamp::Now() - mFxrLastPresentationEnd).ToMilliseconds() >=
+          StaticPrefs::dom_vr_inactive_timeout()) {
+    mFxrAwaitingExplicitEnumeration = true;
+    mFxrLastPresentationEnd = TimeStamp();
+    VRSUBMIT_LOG("[FxR scene] idle release; waiting for explicit enumeration");
+    Shutdown();
+    mLastDisplayEnumerationTime = TimeStamp();
+    DispatchVRDisplayInfoUpdate();
+    return;
+  }
+#endif
   // Shut down the VR devices when not in use
   if (mVRDisplaysRequested || mVRDisplaysRequestedNonFocus ||
       mVRControllersRequested || mEnumerationRequested ||
@@ -531,8 +568,12 @@ void VRManager::StartFrame() {
   if (isPresenting && mLastStartedFrame > 0 &&
       mDisplayInfo.mDisplayState.lastSubmittedFrameId < mLastStartedFrame &&
       duration < kVRMaxFrameSubmitDuration) {
+    VRSUBMIT_LOG_VERBOSE("[VRManager::StartFrame] THROTTLED: mLastStartedFrame=%llu > lastSubmitted=%llu (duration=%.1f ms < %d)",
+           (unsigned long long)mLastStartedFrame, (unsigned long long)mDisplayInfo.mDisplayState.lastSubmittedFrameId, duration, (int)kVRMaxFrameSubmitDuration);
     return;
   }
+  VRSUBMIT_LOG_VERBOSE("[VRManager::StartFrame] DISPATCH: frameId=%llu -> %llu",
+         (unsigned long long)mDisplayInfo.mFrameId, (unsigned long long)(mDisplayInfo.mFrameId + 1));
 
   mDisplayInfo.mFrameId++;
   size_t bufferIndex = mDisplayInfo.mFrameId % kVRMaxLatencyFrames;
@@ -570,6 +611,20 @@ void VRManager::DetectRuntimes() {
 }
 
 void VRManager::EnumerateDevices() {
+#ifdef XP_WIN
+  // An authorized requestSession must wake a service released after exit,
+  // even while the old XRSystem still has a display listener.
+  if (mFxrAwaitingExplicitEnumeration) {
+    mFxrAwaitingExplicitEnumeration = false;
+    mEnumerationRequested = true;
+    VRSUBMIT_LOG("[FxR scene] explicit enumeration waking service");
+    ProcessManagerState();
+    return;
+  }
+  if (!mFxrLastPresentationEnd.IsNull()) {
+    mFxrLastPresentationEnd = TimeStamp::Now();
+  }
+#endif
   if (mState == VRManagerState::Enumeration ||
       (mRuntimeDetectionCompleted &&
        (mVRDisplaysRequested || mEnumerationRequested))) {
@@ -764,6 +819,11 @@ void VRManager::ProcessManagerState_Idle() {
     return;
   }
 
+#ifdef XP_WIN
+  if (mFxrAwaitingExplicitEnumeration && !mEnumerationRequested) {
+    return;
+  }
+#endif
   // Check if we should start activating enumerating XR hardware
   if (mRuntimeDetectionCompleted &&
       (mVRDisplaysRequested || mEnumerationRequested)) {
@@ -1237,6 +1297,9 @@ void VRManager::StartPresentation() {
     return;
   }
 
+#ifdef XP_WIN
+  mFxrLastPresentationEnd = TimeStamp();
+#endif
   // Indicate that we are ready to start immersive mode
   mBrowserState.presentationActive = true;
   mBrowserState.layerState[0].type = VRLayerType::LayerType_Stereo_Immersive;
@@ -1245,9 +1308,27 @@ void VRManager::StartPresentation() {
   mDisplayInfo.mDisplayState.lastSubmittedFrameId = 0;
   mLastSubmittedFrameId = 0;
   mLastStartedFrame = 0;
+
+#ifdef XP_WIN
+  // Get the FxR overlay out of the way for the session. Both live in
+  // this process, so this is a direct call, not IPC. Required, not
+  // cosmetic: overlay and VR process share one SteamVR appkey, and the
+  // scene dies seconds after connecting while the overlay holds it.
+  FxROutputHandler::RequestSetVisible(false);
+#endif
 }
 
 void VRManager::StopPresentation() {
+#ifdef XP_WIN
+  // Bring the 2D panel back. This runs BEFORE the guards below on
+  // purpose: when the VR process dies mid-session the manager leaves
+  // the Active state, so anything after those early returns never
+  // executes and the overlay would stay hidden forever, leaving the
+  // user with no panel at all. Showing an already-visible overlay is
+  // harmless, so restoring unconditionally is the safe direction.
+  FxROutputHandler::RequestSetVisible(true);
+#endif
+
   if (mState != VRManagerState::Active) {
     return;
   }
@@ -1255,6 +1336,9 @@ void VRManager::StopPresentation() {
     return;
   }
 
+#ifdef XP_WIN
+  mFxrLastPresentationEnd = TimeStamp::Now();
+#endif
   // Indicate that we have stopped immersive mode
   mBrowserState.presentationActive = false;
   memset(mBrowserState.layerState, 0,
@@ -1281,17 +1365,21 @@ void VRManager::SubmitFrame(VRLayerParent* aLayer,
                             const layers::SurfaceDescriptor& aTexture,
                             uint64_t aFrameId, const gfx::Rect& aLeftEyeRect,
                             const gfx::Rect& aRightEyeRect) {
+  VRSUBMIT_LOG("[VRManager::SubmitFrame-Layer] aFrameId=%llu, mDisplayInfo.mFrameId=%llu, mFrameStarted=%d, mLastSubmitted=%llu, displayStateLast=%llu",
+         (unsigned long long)aFrameId, (unsigned long long)mDisplayInfo.mFrameId, (int)mFrameStarted, (unsigned long long)mLastSubmittedFrameId, (unsigned long long)mDisplayInfo.mDisplayState.lastSubmittedFrameId);
   if (mState != VRManagerState::Active) {
+    VRSUBMIT_LOG("[VRManager::SubmitFrame-Layer] DROPPED: mState != Active");
     return;
   }
   MonitorAutoLock lock(mCurrentSubmitTaskMonitor);
   if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
-    // Suppress layers hidden by the group mask
+    VRSUBMIT_LOG("[VRManager::SubmitFrame-Layer] DROPPED: groupMask");
     return;
   }
 
   // Ensure that we only accept the first SubmitFrame call per RAF cycle.
   if (!mFrameStarted || aFrameId != mDisplayInfo.mFrameId) {
+    VRSUBMIT_LOG("[VRManager::SubmitFrame-Layer] DROPPED: mFrameStarted=%d, aFrameId=%llu != mFrameId=%llu", (int)mFrameStarted, (unsigned long long)aFrameId, (unsigned long long)mDisplayInfo.mFrameId);
     return;
   }
 
@@ -1302,6 +1390,7 @@ void VRManager::SubmitFrame(VRLayerParent* aLayer,
   if (mLastSubmittedFrameId > 0 &&
       mLastSubmittedFrameId !=
           mDisplayInfo.mDisplayState.lastSubmittedFrameId) {
+    VRSUBMIT_LOG("[VRManager::SubmitFrame-Layer] DROPPED: mLastSubmittedFrameId=%llu != lastSubmittedFrameId=%llu", (unsigned long long)mLastSubmittedFrameId, (unsigned long long)mDisplayInfo.mDisplayState.lastSubmittedFrameId);
     mLastStartedFrame = 0;
     return;
   }
@@ -1331,6 +1420,210 @@ void VRManager::SubmitFrame(VRLayerParent* aLayer,
   }
 }
 
+#if defined(XP_WIN)
+void VRManager::ResetSyncedTexture() {
+  mSyncHandle.reset();
+  mSyncReadFence = nullptr;
+  mSyncMutex = nullptr;
+  mSyncTexture = nullptr;
+  mSyncWidth = 0;
+  mSyncHeight = 0;
+  mSyncFormat = 0;
+}
+
+// Etapa 1B. Roda somente na thread de submissao (VR_SubmitFrame), a unica que
+// toca mSyncDevice: o immediate context do D3D11 nao e thread-safe. No processo
+// GPU nenhum outro codigo usa GetVRDevice() -- as sessoes que o usam vivem no
+// processo VR.
+//
+// Ordem na fila da GPU deste dispositivo:
+//   escrita do produtor -> [WaitWriteFence] -> CopyResource -> read fence
+// e entre processos:
+//   CopyResource -> ReleaseSync -> AcquireSync do processo VR -> Submit
+// A intermediaria vive neste processo, entao sobrevive ao encerramento do
+// processo VR pelo menu do SteamVR ("sair do jogo").
+VRManager::SyncResult VRManager::PrepareSyncedTexture(
+    void* aProducerHandle,
+    const layers::CompositeProcessFencesHolderId& aHolderId,
+    void** aOutHandle) {
+  *aOutHandle = nullptr;
+  if (mSyncUnavailable) {
+    return SyncResult::Unavailable;
+  }
+
+  // Ausencia de capacidade: relatada uma vez, e a submissao direta anterior
+  // continua. Nao e o mesmo que falha por quadro.
+  auto unavailable = [this](const char* aReason) {
+    mSyncUnavailable = true;
+    ResetSyncedTexture();
+    fprintf(stderr,
+            "[VRManager] sincronizacao 1B indisponivel (%s); mantendo "
+            "submissao direta\n",
+            aReason);
+    fflush(stderr);
+    return SyncResult::Unavailable;
+  };
+  // Falha por quadro: o quadro nao e submetido, e a contagem aparece no log.
+  auto drop = [this](const char* aReason, HRESULT aHr) {
+    if (++mSyncDrops <= 10 || mSyncDrops % 300 == 0) {
+      fprintf(stderr,
+              "[VRManager] sincronizacao 1B descartou quadro (%s, hr=0x%08lx, "
+              "descartes=%llu)\n",
+              aReason, (unsigned long)aHr, (unsigned long long)mSyncDrops);
+      fflush(stderr);
+    }
+    return SyncResult::DropFrame;
+  };
+
+  auto* fencesHolderMap = layers::CompositeProcessD3D11FencesHolderMap::Get();
+  if (!fencesHolderMap) {
+    return unavailable("mapa de fences ausente neste processo");
+  }
+
+  if (!mSyncDevice) {
+    mSyncDevice = DeviceManagerDx::Get()->GetVRDevice();
+    if (!mSyncDevice) {
+      return unavailable("GetVRDevice nulo");
+    }
+    if (!layers::FenceD3D11::IsSupported(mSyncDevice)) {
+      return unavailable("dispositivo sem monitored fence");
+    }
+  }
+
+  HRESULT hr = mSyncDevice->GetDeviceRemovedReason();
+  if (FAILED(hr)) {
+    // O DeviceManagerDx nao recria mVRDevice sozinho. Insistir num dispositivo
+    // removido so produziria descartes infinitos.
+    mSyncDevice = nullptr;
+    return unavailable("dispositivo VR removido");
+  }
+
+  RefPtr<ID3D11Device1> device1;
+  hr = mSyncDevice->QueryInterface(__uuidof(ID3D11Device1),
+                                   getter_AddRefs(device1));
+  if (FAILED(hr) || !device1) {
+    return unavailable("dispositivo sem ID3D11Device1");
+  }
+
+  RefPtr<ID3D11Texture2D> producer;
+  hr = device1->OpenSharedResource1(
+      (HANDLE)aProducerHandle, __uuidof(ID3D11Texture2D),
+      (void**)(ID3D11Texture2D**)getter_AddRefs(producer));
+  if (FAILED(hr) || !producer) {
+    return drop("OpenSharedResource1 da textura do produtor", hr);
+  }
+
+  // Nao bloqueia a CPU: ID3D11DeviceContext4::Wait ordena os comandos
+  // seguintes deste dispositivo depois de o produtor terminar de escrever. E o
+  // mesmo contrato de RenderDXGITextureHost::LockInternal.
+  if (!fencesHolderMap->WaitWriteFence(aHolderId, mSyncDevice)) {
+    return drop("WaitWriteFence", E_FAIL);
+  }
+
+  D3D11_TEXTURE2D_DESC srcDesc;
+  producer->GetDesc(&srcDesc);
+
+  if (!mSyncTexture || mSyncWidth != srcDesc.Width ||
+      mSyncHeight != srcDesc.Height ||
+      mSyncFormat != (uint32_t)srcDesc.Format) {
+    ResetSyncedTexture();
+
+    // SHARED_NTHANDLE + SHARED_KEYEDMUTEX: o processo VR abre por
+    // OpenSharedResource1 e ja sincroniza por AcquireSync/ReleaseSync (lote
+    // 1A). moz_external_vr.h nao muda: o protocolo segue na versao atual.
+    CD3D11_TEXTURE2D_DESC desc(
+        srcDesc.Format, srcDesc.Width, srcDesc.Height, 1, 1,
+        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,
+        D3D11_USAGE_DEFAULT, 0, 1, 0,
+        D3D11_RESOURCE_MISC_SHARED_NTHANDLE |
+            D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX);
+    RefPtr<ID3D11Texture2D> tex;
+    hr = mSyncDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(tex));
+    if (FAILED(hr) || !tex) {
+      return unavailable("CreateTexture2D da intermediaria");
+    }
+    RefPtr<IDXGIKeyedMutex> mutex;
+    hr = tex->QueryInterface(__uuidof(IDXGIKeyedMutex), getter_AddRefs(mutex));
+    if (FAILED(hr) || !mutex) {
+      return unavailable("intermediaria sem keyed mutex");
+    }
+    RefPtr<IDXGIResource1> resource;
+    hr = tex->QueryInterface(__uuidof(IDXGIResource1),
+                             getter_AddRefs(resource));
+    if (FAILED(hr) || !resource) {
+      return unavailable("intermediaria sem IDXGIResource1");
+    }
+    HANDLE shared = nullptr;
+    hr = resource->CreateSharedHandle(
+        nullptr, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
+        nullptr, &shared);
+    if (FAILED(hr) || !shared) {
+      return unavailable("CreateSharedHandle da intermediaria");
+    }
+    RefPtr<layers::FenceD3D11> readFence =
+        layers::FenceD3D11::Create(mSyncDevice);
+    if (!readFence) {
+      ::CloseHandle(shared);
+      return unavailable("criacao do read fence");
+    }
+
+    mSyncTexture = tex;
+    mSyncMutex = mutex;
+    mSyncReadFence = readFence;
+    mSyncHandle.reset(shared);
+    mSyncWidth = srcDesc.Width;
+    mSyncHeight = srcDesc.Height;
+    mSyncFormat = (uint32_t)srcDesc.Format;
+    fprintf(stderr,
+            "[VRManager] sincronizacao 1B ativa: intermediaria %ux%u formato "
+            "%u\n",
+            srcDesc.Width, srcDesc.Height, (unsigned)srcDesc.Format);
+    fflush(stderr);
+  }
+
+  // Exclusao mutua com o processo VR. WAIT_TIMEOUT e WAIT_ABANDONED nao
+  // autorizam escrita -- mesmo criterio do lote 1A no lado VR.
+  hr = mSyncMutex->AcquireSync(0, 1000);
+  if (hr != S_OK) {
+    return drop("AcquireSync da intermediaria", hr);
+  }
+
+  RefPtr<ID3D11DeviceContext> context;
+  mSyncDevice->GetImmediateContext(getter_AddRefs(context));
+  context->CopyResource(mSyncTexture, producer);
+
+  // Read fence sinalizado DEPOIS da copia, na fila deste dispositivo, e
+  // registrado no mapa. O WaitAllFencesAndForget do produtor passa a ordenar a
+  // proxima escrita nesta superficie depois desta leitura: e isto que fecha a
+  // reciclagem prematura.
+  const bool readFenceOk = mSyncReadFence->IncrementAndSignal();
+  if (readFenceOk) {
+    fencesHolderMap->SetReadFence(aHolderId, mSyncReadFence);
+  }
+
+  // ReleaseSync faz flush implicito dos comandos acima.
+  const HRESULT hrRelease = mSyncMutex->ReleaseSync(0);
+  if (FAILED(hrRelease)) {
+    return drop("ReleaseSync da intermediaria", hrRelease);
+  }
+  if (!readFenceOk) {
+    // Submeter sem protecao contra reciclagem seria reabrir a corrida.
+    return drop("IncrementAndSignal do read fence", E_FAIL);
+  }
+
+  if (++mSyncFrames == 1 || mSyncFrames % 900 == 0) {
+    fprintf(stderr,
+            "[VRManager] sincronizacao 1B: %llu quadros sincronizados, %llu "
+            "descartados\n",
+            (unsigned long long)mSyncFrames, (unsigned long long)mSyncDrops);
+    fflush(stderr);
+  }
+
+  *aOutHandle = mSyncHandle.get();
+  return SyncResult::Ok;
+}
+#endif  // defined(XP_WIN)
+
 bool VRManager::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
                             uint64_t aFrameId, const gfx::Rect& aLeftEyeRect,
                             const gfx::Rect& aRightEyeRect) {
@@ -1348,10 +1641,96 @@ bool VRManager::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
     case SurfaceDescriptor::TSurfaceDescriptorD3D10: {
       const SurfaceDescriptorD3D10& surf =
           aTexture.get_SurfaceDescriptorD3D10();
-      auto handle = surf.handle()->ClonePlatformHandle();
+      HANDLE finalHandle = surf.handle() ? surf.handle()->GetHandle() : nullptr;
+
+      // Etapa 1B: textura com fence (sem keyed mutex) passa por uma
+      // intermediaria sincronizada. Ver PrepareSyncedTexture. O restante deste
+      // bloco -- validacao e duplicacao do handle para o processo VR -- segue
+      // intacto e opera sobre o handle resultante.
+      if (finalHandle && surf.fencesHolderId().isSome()) {
+        void* synced = nullptr;
+        const SyncResult sync = PrepareSyncedTexture(
+            finalHandle, surf.fencesHolderId().ref(), &synced);
+        if (sync == SyncResult::DropFrame) {
+          return false;
+        }
+        if (sync == SyncResult::Ok) {
+          finalHandle = (HANDLE)synced;
+        }
+      }
+
+      // The handle has to be duplicated into the VR process before it goes into
+      // shared memory. In Gecko 84 this was unnecessary: the texture carried a
+      // legacy DXGI shared handle, which is global and openable from any
+      // process. Modern Gecko shares textures with NT handles instead, and an
+      // NT handle only means something inside the process that owns it -- the
+      // VR process was receiving a raw number from the GPU process and failing
+      // with E_INVALIDARG in OpenSharedResource1 (measured: hr=0x80070057 on
+      // every frame). Nothing in gfx/vr duplicates it, so we do it here.
+      //
+      // Ownership passes to the VR process: VRSession::SubmitFrame wraps the
+      // value in a UniquePlatformHandle, which closes it, so this does not leak.
+      // VRProcessManager is a parent-process singleton (its Initialize()
+      // asserts XRE_IsParentProcess), and this code runs in the GPU process, so
+      // it cannot be used to find the VR process here. VRGPUChild is the IPC
+      // actor that connects this process to the VR process, so its OtherPid()
+      // is the target. The process handle is cached: this runs once per frame.
+      if (!finalHandle) {
+        VRSUBMIT_LOG("[VRManager] missing texture handle");
+        return false;
+      }
+      if (mVRProcessEnabled) {
+        if (!VRGPUChild::IsCreated()) {
+          VRSUBMIT_LOG("[VRManager] missing VR process actor");
+          return false;
+        }
+        static base::ProcessId sCachedVrPid = 0;
+        static HANDLE sCachedVrProcess = nullptr;
+
+        const base::ProcessId vrPid = VRGPUChild::Get()->OtherPid();
+        if (vrPid != sCachedVrPid) {
+          if (sCachedVrProcess) {
+            ::CloseHandle(sCachedVrProcess);
+          }
+          sCachedVrProcess = ::OpenProcess(PROCESS_DUP_HANDLE, FALSE, vrPid);
+          sCachedVrPid = sCachedVrProcess ? vrPid : 0;
+          VRSUBMIT_LOG("[VRManager] processo VR pid=%d handle=%p",
+                       (int)vrPid, (void*)sCachedVrProcess);
+        }
+
+        if (!sCachedVrProcess) {
+          VRSUBMIT_LOG("[VRManager] OpenProcess failed: err=%lu",
+                       (unsigned long)::GetLastError());
+          return false;
+        }
+        if (sCachedVrProcess) {
+          HANDLE duplicated = nullptr;
+          if (::DuplicateHandle(::GetCurrentProcess(), finalHandle,
+                                sCachedVrProcess, &duplicated, 0, FALSE,
+                                DUPLICATE_SAME_ACCESS)) {
+            finalHandle = duplicated;
+          } else {
+            VRSUBMIT_LOG("[VRManager] DuplicateHandle falhou: err=%lu",
+                         (unsigned long)::GetLastError());
+            return false;
+          }
+        }
+      } else {
+        HANDLE duplicated = nullptr;
+        if (!::DuplicateHandle(::GetCurrentProcess(), finalHandle,
+                               ::GetCurrentProcess(), &duplicated, 0, FALSE,
+                               DUPLICATE_SAME_ACCESS)) {
+          VRSUBMIT_LOG("[VRManager] local DuplicateHandle failed: err=%lu",
+                       (unsigned long)::GetLastError());
+          return false;
+        }
+        finalHandle = duplicated;
+      }
+
+      VRSUBMIT_LOG("[VRManager] SubmitFrame: finalHandle=%p", finalHandle);
       layer.textureType =
           VRLayerTextureType::LayerTextureType_D3D10SurfaceDescriptor;
-      layer.textureHandle = (void*)handle.release();
+      layer.textureHandle = (void*)finalHandle;
       layer.textureSize.width = surf.size().width;
       layer.textureSize.height = surf.size().height;
     } break;

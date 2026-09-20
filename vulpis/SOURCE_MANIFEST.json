@@ -1,0 +1,361 @@
+{
+  "baselineGit": "feec67e62a5148b41fd017ccbbc463e8a6f9e83d",
+  "scope": "Source snapshot approved for publication after maintainer headset testing; no binaries",
+  "files": [
+    {
+      "path": "gfx/webrender_bindings/RenderCompositorANGLE.cpp",
+      "sha256": "5a3d2e00a77bfd74674810d7304262480abbe44761f986c36127025c31edaedd",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/webrender_bindings/RenderCompositorANGLE.h",
+      "sha256": "cea37fcb3a82b9829ec5189a2059014c8a0d2e5b193af9a62b9f24879afde8b5",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/ipc/GPUChild.cpp",
+      "sha256": "acd22bb930ada52e157661ffe2bccf5a1fcef02202b20a336495cb914cc7922f",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/ipc/GPUParent.h",
+      "sha256": "2301b8d5028eaa5fc7828be50beff8d2f327e5fa67932dd63032f8b3dda04b0c",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/ipc/GPUParent.cpp",
+      "sha256": "4334d0fa47f7ab5e48a17cd60f96220a4b4c365a290eed3239fef517c3b9ee9c",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/ipc/PGPU.ipdl",
+      "sha256": "0257afa27819fe59b79d5e61c728bb0c6acedf3c5ef785275b1cf0ac5f17aa45",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/ipc/GPUChild.h",
+      "sha256": "216820c0bd97444c216b5eb8663980d95741c721b85515f0595451ceb0d8c78c",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/FxRWindowManager.cpp",
+      "sha256": "3a301999b09171e4dbc2b960881a5124e09aa12f44ba43b7e49a8709ce03cc71",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/nsFxrCommandLineHandler.cpp",
+      "sha256": "c933274d221f73ad541adf02f6fa86425ec0d37f4b4f8d3236eb2855d0546795",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/FxROutputHandler.cpp",
+      "sha256": "3042e2d870f8751113ef013a0342103ab09c7e60db0efb6a0396157c28d3120f",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/FxROutputHandler.h",
+      "sha256": "fde964cb5332a6bcf85ddcaf48e9a400b09fd4b9303839a4e9d5a899a088475d",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/service/OpenVRSession.cpp",
+      "sha256": "0ca4773c4e4d483af29cd40af2d59ac02e7917a35ca0024b3ec7f86953edcabf",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/service/VRSession.cpp",
+      "sha256": "227376b23d30e19c1c01075d27d1f82784a3e32e037d47f9f9bc3b48b361911e",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/service/VRService.cpp",
+      "sha256": "c96c8c66203a1da5f54a7e25bf219805884767a4a8cf32c271fee713b7316bbb",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/ipc/VRProcessManager.h",
+      "sha256": "4fbe7c9963dffef6de97b2ca347cb367a56928a43c832f0b18243a441c7b1201",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/ipc/VRProcessChild.cpp",
+      "sha256": "f8d381a83fc2591bf193f742ed2d319cbe85fe0870fa4a4e17f4c3e60d7a12de",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/ipc/VRParent.cpp",
+      "sha256": "2512b90cf6908fd6e0b1548f19a7c03af270ab725687fe443fdcd4c84071b13a",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/ipc/VRProcessManager.cpp",
+      "sha256": "5e2daec6aa8015e13ed7bc21b1fb9436864a348638f690924d63b7a7f6f6e48c",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/ipc/VRLayerChild.cpp",
+      "sha256": "e30f32587012ff24405518cdcff954584b823a6dda98bd30c633aab84a555d63",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/ipc/VRManagerChild.cpp",
+      "sha256": "270f61ea4b03b960f4d8efe21a74091fdd5bf6c673bd8bd4a7b6a40c76309a25",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/ipc/VRLayerParent.cpp",
+      "sha256": "070d6ba044504c303d2d69acf53a57bd3c818291ba43d9b5cd6cec6b3fb5c793",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/VRManager.cpp",
+      "sha256": "5fa35ece0dc9134d2b01d64a1230dedf078effb214f85704671588ce23b7d782",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/moz.build",
+      "sha256": "1ef3755a38f59bae68e43d55d7ade8abf6b2893eae723784909b3fdda365ed1d",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/VRManager.h",
+      "sha256": "79ce150db156f49bc8fd77d12e14c2c5d2d109223d1272105ed861c0ec7512c4",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/VRDisplayPresentation.cpp",
+      "sha256": "caa5fadf831912491d2cc61530aeadc0c2251b1610294ab12c80c943b2424a34",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/FxRWindowManager.h",
+      "sha256": "6aa5f5ea559d2c3c4eb0b84a2d91b4e5d6d63c5cb05b1094e5f473735225955b",
+      "baselineVerified": true
+    },
+    {
+      "path": "widget/windows/WinMessages.h",
+      "sha256": "51211ff36cb8a05b2aa29e3266e5f40b6869f58c339837cf335f21f849af997c",
+      "baselineVerified": true
+    },
+    {
+      "path": "widget/windows/nsWindowGfx.cpp",
+      "sha256": "607de88334c70c7f20461e55df94ce8577042366ce77210e8735c56791c62f3f",
+      "baselineVerified": true
+    },
+    {
+      "path": "widget/windows/OSKVRManager.cpp",
+      "sha256": "3471a34139411764f480a1e19798a60620c7ce4626567a4a560fb394ac71d9e8",
+      "baselineVerified": true
+    },
+    {
+      "path": "widget/windows/WinIMEHandler.cpp",
+      "sha256": "3f31c1c9efc0c520711bc052551a61a5e92ed3a29083ea10c72eb90a06f1af45",
+      "baselineVerified": true
+    },
+    {
+      "path": "widget/windows/WinCompositorWidget.h",
+      "sha256": "e57f98a7bde5a8f3a0c29357a5c0094a9af1300d568eb8780d94c11173a4c07b",
+      "baselineVerified": true
+    },
+    {
+      "path": "widget/windows/nsWindow.h",
+      "sha256": "aba1cf1e6822ef310ab3e346f9099c5a50d161b09e026ef0ca1e569170ba3d83",
+      "baselineVerified": true
+    },
+    {
+      "path": "widget/windows/nsWindow.cpp",
+      "sha256": "d1659f8fdcdc2f7c1926a6ad25958db6da36095959d1fd4118c7887514a31a94",
+      "baselineVerified": true
+    },
+    {
+      "path": "dom/chrome-webidl/ChromeUtils.webidl",
+      "sha256": "161a6b4905475ea2a665f60c83ffe364b99009cb22aaf6d4fe6d0d28b3f6ead0",
+      "baselineVerified": true
+    },
+    {
+      "path": "dom/vr/XRSession.cpp",
+      "sha256": "7d54169a815269674313966255e41d4661a619ac7a46f7e9a78f28f52d8f513b",
+      "baselineVerified": true
+    },
+    {
+      "path": "dom/vr/XRSystem.cpp",
+      "sha256": "6747b6c24ed0d1a96d7d4af0ea909dc89a8e44fa4b8a5a725555a358b136fd80",
+      "baselineVerified": true
+    },
+    {
+      "path": "dom/vr/XRSystem.h",
+      "sha256": "8b6d512b3b5c5a34d499643673c8e5e1740340de6e674652b606f15b014155de",
+      "baselineVerified": true
+    },
+    {
+      "path": "dom/webidl/WebXR.webidl",
+      "sha256": "5dfc790f4f260f40d3699fe44b076f6fd025119d3bc6831d71f881ad97f44755",
+      "baselineVerified": true
+    },
+    {
+      "path": "dom/base/ChromeUtils.h",
+      "sha256": "c6eef77802ab317f3a170cea763b7d3b00240de44cfa7ed4b5e4a8c0aeb77cce",
+      "baselineVerified": true
+    },
+    {
+      "path": "dom/base/ChromeUtils.cpp",
+      "sha256": "85db82412cd6f56d0fc874e5b2aa4fc24cc0182ace7976a2715cf736fdb7cd93",
+      "baselineVerified": true
+    },
+    {
+      "path": "dom/canvas/WebGLContext.cpp",
+      "sha256": "0356c211b3eaf9432cecba2084b7425574dfea22f88c4624b3f87145f2fa69de",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/fxr/jar.mn",
+      "sha256": "41e8e2af9603a19f3beefd1229275c5aff9b4b4386e19df434ef37bf9608d4b3",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/fxr/content/prefs.html",
+      "sha256": "449de30e90eed64e081390d1439cc3061fb8f8bf4f5c0aa53844c868ff37e800",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/fxr/content/common.js",
+      "sha256": "1537a0e130227f9f0605b8085b838e7781ad736dc6b4067eacb660628456b4a2",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/fxr/content/fxrui.js",
+      "sha256": "98cc1215ebd08711296fa701c7ea4bea55cdd2d9a8e592f28c39a82b10260676",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/fxr/content/fxrui.css",
+      "sha256": "126571d231bab47186012bcdd812dae288498355e001d3cc22c870979e71bb41",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/fxr/content/prefs.js",
+      "sha256": "4f9689b5afeb4d95f121cedc490efaf49530f1276e9cd13742ebb058ab5a9fe7",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/fxr/content/fxr-fullScreen.js",
+      "sha256": "d820fddd6ee34ef18b467078c4daedbf9a44be75d6304438af73b7a45cf63d41",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/fxr/content/fxrui.html",
+      "sha256": "e3c27848d99788d728fc086edde36f281c20089f1bbc68d51ee87293cf96720e",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/actors/moz.build",
+      "sha256": "083da694d2b7647d50eb04bf0359ec47e273ae07d0c52b11cd16bb45a95fe186",
+      "baselineVerified": true
+    },
+    {
+      "path": "browser/moz.configure",
+      "sha256": "e2ec06fd7a09c3be4195d059664bf28829f736c8209dec133dbf52d27cc7526a",
+      "baselineVerified": true
+    },
+    {
+      "path": "gfx/vr/FxRDashboardIcon.h",
+      "sha256": "65119b0d6d0e8da1a382ce43decdbb37932b6f2bde459bbe2532b2e917bc292f",
+      "baselineVerified": false
+    },
+    {
+      "path": "gfx/vr/FxROverlayInputEvent.h",
+      "sha256": "7663ed104ac57b98926806aa2028db713bac7b2f478c2a84e466480dc836cdba",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/actors/FxRMediaChild.sys.mjs",
+      "sha256": "be551c451e4c6bb0923b3e154be6da777693b61600046b94ea3f755fd5b58888",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/actors/FxRMediaParent.sys.mjs",
+      "sha256": "747713b3f74b7507cd019acc78f4bdba660f4a98e8388f4ba8371a975f02c54b",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/fxr-transport-controls.css",
+      "sha256": "1e66c294038436eb08c16de05ae7ee778fa2751b096b4fbe9c0a54807c04783d",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/fxr-transport-controls.html",
+      "sha256": "8134d2e3330359748ad4e8fe56a9e4952844abdc78ae48ff95b781b6475f0bf8",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/fxr-transport-controls.js",
+      "sha256": "8b5998f9b475891affecddde4a1cd47e966955ccb533de92ba092d489d5cceab",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/vulpis-onboarding.css",
+      "sha256": "f94ddb555d62a17d2f06613286c3578fc8314bbdf368494e7dc028fe922403b6",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/vulpis-onboarding.js",
+      "sha256": "3d35cac76c4caa295120ab6b6c3480e00cd55b92c534cab376f980d12c43092e",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/locales/en-US/onboarding.ftl",
+      "sha256": "3152a2d4a5846e14d36e15dc0e6e04e5d105932112436a9904acde9a5f43374d",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/locales/pt-BR/onboarding.ftl",
+      "sha256": "6c15b250afe609a6a43b223eb4052b595cef78dd7b0481b774f81258542987b7",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/icon-180sbs.svg",
+      "sha256": "0dfcef1466cb025c4a13f6b1809c8c8f00fa4f81fba277ea6646b04ca77ee969",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/icon-180tb.svg",
+      "sha256": "29030d44c4506029e9644671ab600eeea51793e5586c04f0f437c58a8cceb840",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/icon-2d.svg",
+      "sha256": "bb1eac07f0225c8efb86937b1e0f0a72ce04e3b762ef24535290d8bef5817d98",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/icon-360.svg",
+      "sha256": "a2a45e3c42a02af45a65186e225bf339d3cbc37ee7480aaa8f210948be57f97a",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/icon-3dsidebyside.svg",
+      "sha256": "16ae67a9e51dcb95695df7bfd17e044eebe0e6c6f9f588020e28b7b82f003a8e",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/icon-projection.svg",
+      "sha256": "7774e77034871ab23f548f47504ca394f5a1de5a14ca57f18f89369d00552bb5",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/icon-stereo360.svg",
+      "sha256": "2b36baa5e596259d038bbba7e0711d3e71574baf176f078e379931e7a8b9527e",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/trigger-tutorial.svg",
+      "sha256": "b7e3e020ecde4fbc28d81a775cb98b143e2ce1f66a3b766764a930102eb52dc4",
+      "baselineVerified": false
+    },
+    {
+      "path": "browser/fxr/content/assets/vulpis-vr.svg",
+      "sha256": "12f1828ed1a981fa7acb7d14940881c57d761ecf2cb6a0cc27c612a6b9e0b39f",
+      "baselineVerified": false
+    }
+  ]
+}

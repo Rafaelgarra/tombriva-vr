@@ -385,8 +385,19 @@ void nsWindow::CreateCompositor() {
 
   MaybeEnableWindowOcclusion(/* aEnable */ true);
 
-  if (mRequestFxrOutputPending) {
+  if (mRequestFxrOutputPending && GetRemoteRenderer()) {
     GetRemoteRenderer()->SendRequestFxrOutput();
+    printf_stderr("[FxR-Modern] SendRequestFxrOutput sent from CreateCompositor()!\n");
+  }
+}
+
+void nsWindow::CreateCompositor(int aWidth, int aHeight) {
+  nsIWidget::CreateCompositor(aWidth, aHeight);
+
+  if (mRequestFxrOutputPending && GetRemoteRenderer()) {
+    GetRemoteRenderer()->SendRequestFxrOutput();
+    printf_stderr("[FxR-Modern] SendRequestFxrOutput sent from CreateCompositor(%d, %d)!\n",
+                  aWidth, aHeight);
   }
 }
 
@@ -397,12 +408,12 @@ void nsWindow::DestroyCompositor() {
 }
 
 void nsWindow::RequestFxrOutput() {
+  mRequestFxrOutputPending = true;
   if (GetRemoteRenderer() != nullptr) {
-    MOZ_CRASH("RequestFxrOutput should happen before Compositor is created.");
+    GetRemoteRenderer()->SendRequestFxrOutput();
+    printf_stderr("[FxR-Modern] SendRequestFxrOutput sent immediately via GetRemoteRenderer!\n");
   } else {
-    // The compositor isn't ready, so indicate to make the IPC call when
-    // it is available.
-    mRequestFxrOutputPending = true;
+    printf_stderr("[FxR-Modern] RequestFxrOutput pending compositor creation\n");
   }
 }
 

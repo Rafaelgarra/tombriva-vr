@@ -8,6 +8,7 @@
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/StackArray.h"
@@ -136,8 +137,13 @@ bool RenderCompositorANGLE::Initialize(nsACString& aError) {
     return false;
   }
 
+  // Firefox Reality: when rendering offscreen we own the render target, so we
+  // want neither DirectComposition (which is bound to an HWND) nor a swapchain.
+  mFxrOffscreenMode =
+      mozilla::Preferences::GetBool("fxr.offscreen-render", false);
+
   // Create DCLayerTree when DirectComposition is used.
-  if (gfx::gfxVars::UseWebRenderDCompWin()) {
+  if (!mFxrOffscreenMode && gfx::gfxVars::UseWebRenderDCompWin()) {
     HWND compositorHwnd = GetCompositorHwnd();
     if (compositorHwnd) {
       mDCLayerTree = DCLayerTree::Create(mGL, mEGLConfig, mDevice, mCtx,
@@ -157,8 +163,15 @@ bool RenderCompositorANGLE::Initialize(nsACString& aError) {
     mDCLayerTree->DisableNativeCompositor();
   }
 
-  // Create SwapChain when compositor is not used
-  if (!UseCompositor()) {
+  if (mFxrOffscreenMode) {
+    // No swapchain at all: ResizeBufferIfNeeded allocates our own texture and
+    // wraps it as the EGL surface WebRender draws into.
+    if (!ResizeBufferIfNeeded()) {
+      aError.Assign("RcANGLE(create FxR offscreen surface failed)"_ns);
+      return false;
+    }
+  } else if (!UseCompositor()) {
+    // Create SwapChain when compositor is not used
     if (!CreateSwapChain(aError)) {
       // SwapChain creation failed.
       return false;
@@ -189,7 +202,7 @@ HWND RenderCompositorANGLE::GetCompositorHwnd() {
     MOZ_ASSERT(XRE_IsParentProcess());
 
     // When GPU process does not exist, we do not need to use compositor window.
-    hwnd = mWidget->AsWindows()->GetHwnd();
+    hwnd = mWidget->AsWindows()->GetRealWindowHwnd();
   }
 
   return hwnd;
@@ -429,7 +442,11 @@ bool RenderCompositorANGLE::ShouldUseAlpha() const {
 bool RenderCompositorANGLE::BeginFrame() {
   mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
 
-  if (!UseCompositor()) {
+  if (mFxrOffscreenMode) {
+    if (!ResizeBufferIfNeeded()) {
+      return false;
+    }
+  } else if (!UseCompositor()) {
     if (NS_WARN_IF(!mSwapChainUsingAlpha && ShouldUseAlpha())) {
       if (NS_WARN_IF(!RecreateNonNativeCompositorSwapChain())) {
         return false;
@@ -467,7 +484,22 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
     mFence->IncrementAndSignal();
   }
 
-  if (!UseCompositor()) {
+  if (mFxrOffscreenMode) {
+    // Hand our own texture to the overlay. There is no swapchain and nothing to
+    // Present(): the desktop window is not the destination any more.
+    if (auto* fxrHandler = mWidget->AsWindows()->GetFxrOutputHandler()) {
+      if (mFxrOffscreenTexture && mBufferSize.isSome()) {
+        const LayoutDeviceIntSize& size = mBufferSize.ref();
+        if (fxrHandler->TryInitializeOffscreen(mFxrOffscreenTexture, size.width,
+                                               size.height)) {
+          fxrHandler->UpdateOutput(mCtx);
+        }
+      }
+    }
+    // Make sure the drawing is actually done before SteamVR samples it; there
+    // is no Present() doing this for us.
+    mCtx->Flush();
+  } else if (!UseCompositor()) {
     auto start = TimeStamp::Now();
     if (auto* fxrHandler = mWidget->AsWindows()->GetFxrOutputHandler()) {
       // There is a Firefox Reality handler for this swapchain. Update this
@@ -591,7 +623,7 @@ bool RenderCompositorANGLE::WaitForGPU() {
 }
 
 bool RenderCompositorANGLE::ResizeBufferIfNeeded() {
-  MOZ_ASSERT(mSwapChain);
+  MOZ_ASSERT(mSwapChain || mFxrOffscreenMode);
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
 
@@ -606,11 +638,16 @@ bool RenderCompositorANGLE::ResizeBufferIfNeeded() {
   }
 
   // Release EGLSurface of back buffer before calling ResizeBuffers().
+  // DestroyEGLSurface() drops the surface override first, so the texture is
+  // only safe to release afterwards.
   DestroyEGLSurface();
+  mFxrOffscreenTexture = nullptr;
 
   mBufferSize = Some(size);
 
-  if (!CreateEGLSurface()) {
+  const bool created =
+      mFxrOffscreenMode ? CreateFxrOffscreenSurface(size) : CreateEGLSurface();
+  if (!created) {
     mBufferSize.reset();
     return false;
   }
@@ -681,6 +718,60 @@ bool RenderCompositorANGLE::CreateEGLSurface() {
 
   mEGLSurface = surface;
 
+  return true;
+}
+
+// Firefox Reality: allocate a plain D3D11 render target and expose it to
+// WebRender as the EGL surface it draws into, replacing the swapchain
+// backbuffer. fCreatePbufferFromClientBuffer accepts any ID3D11Texture2D, and
+// SetOverlayTexture likewise does not care where the texture came from -- so
+// this severs the overlay's dependency on the desktop window presenting.
+// Modelled on DCLayerDCompositionTexture::AllocateTextures.
+bool RenderCompositorANGLE::CreateFxrOffscreenSurface(
+    const LayoutDeviceIntSize& aSize) {
+  MOZ_ASSERT(mEGLSurface == EGL_NO_SURFACE);
+
+  // D3D11_RESOURCE_MISC_SHARED is required, not optional. SteamVR's compositor
+  // is a separate process (vrcompositor.exe), so SetOverlayTexture obtains a
+  // shared handle from the texture we hand it; a plain non-shared texture kills
+  // the process there. A swapchain backbuffer is shareable by construction,
+  // which is why the swapchain path never needed this. Legacy MISC_SHARED (not
+  // SHARED_NTHANDLE) is what OpenVR's D3D11 interop expects.
+  CD3D11_TEXTURE2D_DESC desc(
+      DXGI_FORMAT_B8G8R8A8_UNORM, aSize.width, aSize.height, 1, 1,
+      D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,
+      D3D11_USAGE_DEFAULT, 0, 1, 0, D3D11_RESOURCE_MISC_SHARED);
+
+  RefPtr<ID3D11Texture2D> texture;
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
+  if (FAILED(hr) || !texture) {
+    gfxCriticalNote << "FxR: failed to create offscreen texture: "
+                    << gfx::hexa(hr) << " Size : " << aSize;
+    return false;
+  }
+
+  const EGLint pbuffer_attribs[]{LOCAL_EGL_WIDTH, aSize.width, LOCAL_EGL_HEIGHT,
+                                 aSize.height, LOCAL_EGL_NONE};
+  const auto buffer = reinterpret_cast<EGLClientBuffer>(texture.get());
+
+  const auto& gle = gl::GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
+  const EGLSurface surface = egl->fCreatePbufferFromClientBuffer(
+      LOCAL_EGL_D3D_TEXTURE_ANGLE, buffer, mEGLConfig, pbuffer_attribs);
+  if (!surface) {
+    EGLint err = egl->mLib->fGetError();
+    gfxCriticalError() << "FxR: failed to create Pbuffer of offscreen texture: "
+                       << gfx::hexa(err) << " Size : " << aSize;
+    return false;
+  }
+
+  mFxrOffscreenTexture = texture;
+  mEGLSurface = surface;
+
+  printf_stderr(
+      "[FxR-Modern-GPU] offscreen render target created (%dx%d), "
+      "overlay no longer depends on the desktop window\n",
+      aSize.width, aSize.height);
   return true;
 }
 

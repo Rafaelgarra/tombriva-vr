@@ -63,6 +63,7 @@ class WinCompositorWidget : public CompositorWidget {
   }
 
   HWND GetCompositorHwnd() const { return mCompositorWnds.mCompositorWnd; }
+  HWND GetRealWindowHwnd() const { return mWnd; }
 
   void EnsureCompositorWindow();
   void DestroyCompositorWindow();

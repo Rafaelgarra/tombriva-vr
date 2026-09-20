@@ -13,6 +13,7 @@ const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 window.addEventListener(
   "DOMContentLoaded",
   () => {
+    initDesktopVisibility();
     initAboutInfo();
     initClearAllData();
     initSubmitHealthReport();
@@ -114,4 +115,15 @@ function initParentDependencies() {
       window.parent.showReportIssue();
     });
   }
+}
+
+function initDesktopVisibility() {
+  const pref = "fxr.desktop-window-visible";
+  const checkbox = document.getElementById("eDesktopVisible");
+  const update = () => { checkbox.checked = Services.prefs.getBoolPref(pref, true); };
+  update();
+  checkbox.disabled = !Services.prefs.getBoolPref("fxr.offscreen-render", false);
+  checkbox.addEventListener("change", () => Services.prefs.setBoolPref(pref, checkbox.checked));
+  Services.prefs.addObserver(pref, update);
+  window.addEventListener("unload", () => Services.prefs.removeObserver(pref, update), {once: true});
 }

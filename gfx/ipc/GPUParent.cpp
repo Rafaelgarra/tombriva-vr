@@ -38,6 +38,9 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CanvasRenderThread.h"
 #include "mozilla/gfx/gfxVars.h"
+#if defined(XP_WIN)
+#  include "FxROutputHandler.h"
+#endif
 #include "mozilla/glean/GfxMetrics.h"
 #include "mozilla/glean/GleanTestsTestMetrics.h"
 #include "mozilla/image/ImageMemoryReporter.h"
@@ -719,6 +722,33 @@ mozilla::ipc::IPCResult GPUParent::RecvTestTriggerMetrics(
 
 mozilla::ipc::IPCResult GPUParent::RecvCrashProcess() {
   MOZ_CRASH("Deliberate GPU process crash");
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUParent::RecvShowFxrVirtualKeyboard(
+    const bool& aShow) {
+#if defined(XP_WIN)
+  // Only the Renderer thread may touch the overlay handle, so leave a request
+  // for FxROutputHandler::UpdateOutput to pick up on its next frame.
+  FxROutputHandler::RequestShowKeyboard(aShow);
+#endif
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUParent::RecvSetFxrProjectionMode(
+    const uint32_t& aMode) {
+#if defined(XP_WIN)
+  // Same rule as the keyboard: the overlay handle belongs to the input pump
+  // thread, so leave the request for it to service.
+  FxROutputHandler::RequestProjectionMode(aMode);
+#endif
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUParent::RecvSetFxrWindowDocked(const bool& aDocked) {
+#ifdef XP_WIN
+  FxROutputHandler::RequestDocked(aDocked);
+#endif
   return IPC_OK();
 }
 
