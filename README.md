@@ -51,6 +51,8 @@ The `tombriva-vr` branch contains the imported modifications on the official bas
 
 The existing build disables the updater. A future update channel must ship only Tombriva builds after testing against updated Gecko versions; do not point it at stock Firefox binaries. Full installer/executable rebranding, security defaults, language packs, long-session testing and clean-PC installation remain release tasks. No automatic compatibility with arbitrary browser or SteamVR updates is claimed.
 
+Releases are tagged as `tombriva-v<version>` and listed in the [changelog](tombriva/CHANGELOG.md). The current milestone is **0.1.0-preview**, a source-only release.
+
 ## Acknowledgements
 
 Tombriva VR builds on the work of **Mozilla and contributors**, and the **Firefox Reality contributors**. Thank you to the developers who created and maintained these projects. See the [Firefox source](https://github.com/mozilla-firefox/firefox), [Firefox Reality PC source](https://github.com/MozillaReality/gecko-dev), and [source import record](tombriva/SOURCE_IMPORT.md) for the lineage. Original copyright and license notices remain in the source tree.
